@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bus Route Optimizer — A→B with stops</title>
+  <title>opti-route · 公車路線與站點設置規劃</title>
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
   <div class="app">
     <aside class="sidebar">
       <header class="brand">
-        <h1>BusOpt</h1>
-        <p class="tagline">公車主路線 + 站點選址聯合最佳化</p>
+        <h1>opti-route</h1>
+        <p class="tagline">公車路線與站點設置規劃</p>
       </header>
 
       <details class="panel" open>
@@ -20,7 +20,7 @@
           <div class="grid2">
             <label>城市規模<input id="g-scale" type="number" value="192" min="16" max="900" step="1" /></label>
             <label>乘客數<input id="g-pass" type="number" value="30" min="0" max="200" /></label>
-            <label>drop %<input id="g-drop" type="number" value="12" min="0" max="50" step="1" /></label>
+            <label>畸零度<input id="g-drop" type="number" value="12" min="0" max="50" step="1" /></label>
             <label>禁區數<input id="g-forb" type="number" value="2" min="0" max="6" /></label>
           </div>
           <button id="btn-regen" class="primary block">生成城市</button>
@@ -81,13 +81,11 @@
               <span class="badge ksp">K</span>
               <span class="solv-name">K-最短路徑啟發式</span>
               <span class="solv-desc">Yen's algorithm + 走廊 p-median facility location</span>
-              <span class="solv-tip">O(K·(V·log V + E))   · scales to 1000+ nodes</span>
             </button>
             <button class="solver" data-algo="mip">
               <span class="badge mip">M</span>
               <span class="solv-name">混合整數規劃 (MILP)</span>
               <span class="solv-desc">OR-Tools CP-SAT · MTZ subtour elimination</span>
-              <span class="solv-tip">NP-hard exact     · ≤200 nodes recommended</span>
             </button>
           </div>
         </div>

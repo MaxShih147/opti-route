@@ -8,10 +8,13 @@ const svgNS = "http://www.w3.org/2000/svg";
 let scene = null;
 let editMode = "none";
 let lastResults = []; // history of solves, for comparison
+let activeAlgo = null; // which algorithm's solution is currently rendered on the map
 const ALGO_LABELS = {
   ksp: "K-最短路徑啟發式",
   mip: "混合整數規劃 (MILP)",
 };
+// short labels used in the comparison table to avoid line wrapping
+const ALGO_SHORT = { ksp: "K", mip: "M" };
 
 function status(text, kind = "") {
   const el = $("#status");
@@ -122,6 +125,8 @@ function renderSolution(result) {
   const nodeById = {};
   for (const n of scene.nodes) nodeById[n.id] = n;
 
+  SVG.classList.add("has-solution");
+
   // route polyline
   clear(layers.route);
   if (result && result.path_nodes && result.path_nodes.length > 1) {
@@ -157,6 +162,7 @@ function renderSolution(result) {
 
 function clearSolution() {
   clear(layers.route); clear(layers.stops); clear(layers.walk);
+  SVG.classList.remove("has-solution");
 }
 
 // ---------------- Interactions ----------------
@@ -234,7 +240,7 @@ async function regenerate() {
   try {
     scene = await apiPost("/api/generate", params);
     renderScene(); clearSolution();
-    lastResults = []; renderResultsTable();
+    lastResults = []; activeAlgo = null; renderResultsTable();
     status(`已生成 · ${scene.nodes.length} 節點 · ${scene.edges.length} 邊 · ${scene.passengers.length} 乘客`);
   } catch (e) { status("生成失敗: " + e.message, "error"); }
 }
@@ -282,7 +288,19 @@ function pushResult(r) {
   // keep at most one per algorithm (latest)
   lastResults = lastResults.filter(x => x.algorithm !== r.algorithm);
   lastResults.push(r);
+  activeAlgo = r.algorithm;
   renderResultsTable();
+}
+
+function showResult(algo) {
+  const r = lastResults.find(x => x.algorithm === algo);
+  if (!r) return;
+  activeAlgo = algo;
+  renderSolution(r);
+  renderResultsTable();
+  let s = `${ALGO_LABELS[algo]} · 總成本 ${r.cost_total.toFixed(1)} · ${r.runtime_ms.toFixed(0)}ms`;
+  if (r.optimality_gap != null) s += ` · gap ${(r.optimality_gap*100).toFixed(1)}%`;
+  status(s);
 }
 
 function renderResultsTable() {
@@ -294,12 +312,24 @@ function renderResultsTable() {
   empty.style.display = "none";
   const best = Math.min(...lastResults.map(r => r.cost_total));
   let html = `<table>
-    <thead><tr><th class="algo">演算法</th><th>總</th><th>路線</th><th>站</th><th>步行</th><th>ms</th></tr></thead>
+    <thead>
+      <tr>
+        <th class="col-algo" rowspan="2">方法</th>
+        <th class="col-group" colspan="4">成本</th>
+        <th class="col-group">運算時間</th>
+      </tr>
+      <tr>
+        <th>總計</th><th>路線</th><th>設站</th><th>步行</th>
+        <th class="col-unit">ms</th>
+      </tr>
+    </thead>
     <tbody>`;
   for (const r of lastResults) {
     const isBest = Math.abs(r.cost_total - best) < 1e-3;
-    html += `<tr class="${isBest ? 'best' : ''}">
-      <td class="algo">${ALGO_LABELS[r.algorithm]}</td>
+    const isActive = r.algorithm === activeAlgo;
+    const cls = [isBest ? "best" : "", isActive ? "active" : ""].filter(Boolean).join(" ");
+    html += `<tr class="${cls}" data-algo="${r.algorithm}" title="${ALGO_LABELS[r.algorithm]}">
+      <td class="algo">${ALGO_SHORT[r.algorithm]}</td>
       <td>${r.cost_total.toFixed(0)}</td>
       <td>${r.cost_route.toFixed(0)}</td>
       <td>${r.cost_stops.toFixed(0)}</td>
@@ -309,6 +339,10 @@ function renderResultsTable() {
   }
   html += "</tbody></table>";
   wrap.innerHTML = html;
+  // bind row clicks → switch SVG to that algorithm's result
+  wrap.querySelectorAll("tr[data-algo]").forEach(tr => {
+    tr.addEventListener("click", () => showResult(tr.dataset.algo));
+  });
 }
 
 // ---------------- Wire up controls ----------------

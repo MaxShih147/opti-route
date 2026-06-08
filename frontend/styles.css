@@ -237,43 +237,57 @@ button.solver:disabled { opacity: 0.5; cursor: wait; }
 .solv-name { font-weight: 500; font-size: 12.5px; color: var(--text); }
 .solv-desc { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
 
-/* tooltip — only revealed on hover */
-.solv-tip {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 50;
-  background: rgba(13, 17, 23, 0.96);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 7px 10px;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 10px;
-  line-height: 1.45;
-  color: var(--text);
-  white-space: pre;
-  letter-spacing: 0;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-4px);
-  transition: opacity 150ms ease, transform 150ms ease;
-}
-button.solver:hover .solv-tip {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* ---------- results table ---------- */
 
 .results-panel .empty { color: var(--text-dim); font-size: 11.5px; text-align: center; padding: 12px 0; }
 #results-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
-#results-table th, #results-table td { padding: 5px 4px; text-align: right; border-bottom: 1px solid var(--border); }
-#results-table th { color: var(--text-dim); font-weight: 500; text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.4px; }
-#results-table td.algo { text-align: left; }
+#results-table th, #results-table td {
+  padding: 5px 4px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+#results-table th {
+  color: var(--text-dim);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+/* group headers (top row) — slight emphasis + bottom hairline separation */
+#results-table thead tr:first-child th.col-group {
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+#results-table th.col-algo {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 10.5px;
+  vertical-align: middle;
+  border-right: 1px solid var(--border);
+}
+/* visual divider between 成本 group and 運算時間 group */
+#results-table thead tr:first-child th.col-group:nth-of-type(2) {
+  border-left: 1px solid var(--border);
+}
+#results-table thead tr:nth-child(2) th:nth-child(5) {
+  border-left: 1px solid var(--border);
+}
+#results-table tbody tr td:first-child { border-right: 1px solid var(--border); }
+#results-table tbody tr td:nth-child(6) { border-left: 1px solid var(--border); }
+
+#results-table th.col-unit { font-size: 9.5px; color: var(--text-dim); }
+#results-table td.algo { font-weight: 600; }
 #results-table tr.best td { color: var(--ok); font-weight: 600; }
-#results-table tr:hover td { background: rgba(88, 166, 255, 0.08); }
+#results-table tbody tr { cursor: pointer; transition: background 120ms ease; }
+#results-table tr:hover td { background: rgba(255, 255, 255, 0.04); }
+#results-table tr.active td { background: rgba(140, 152, 164, 0.14); }
+#results-table tr.active td:first-child {
+  box-shadow: inset 2px 0 0 var(--accent-2);
+}
 
 /* ---------- legend marks (used inside the collapsible canvas legend) ---------- */
 
@@ -444,3 +458,14 @@ button.solver:hover .solv-tip {
 .label-bg { fill: var(--bg); fill-opacity: 0.85; }
 
 .terrain-overlay circle { opacity: 0.6; mix-blend-mode: screen; }
+
+/* When a solution is rendered, fade background layers so the route stands out */
+#canvas.has-solution .layer-terrain,
+#canvas.has-solution .layer-forbidden,
+#canvas.has-solution .layer-edges,
+#canvas.has-solution .layer-nodes {
+  opacity: 0.35;
+  transition: opacity 220ms ease;
+}
+#canvas.has-solution .layer-passengers { opacity: 0.55; transition: opacity 220ms ease; }
+/* endpoints (A/B), route, stops, walk lines remain full strength */
