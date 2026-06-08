@@ -8,7 +8,10 @@ const svgNS = "http://www.w3.org/2000/svg";
 let scene = null;
 let editMode = "none";
 let lastResults = []; // history of solves, for comparison
-const ALGO_LABELS = { ksp: "K-最短 C", mip: "MIP 最佳 A" };
+const ALGO_LABELS = {
+  ksp: "K-最短路徑啟發式",
+  mip: "混合整數規劃 (MILP)",
+};
 
 function status(text, kind = "") {
   const el = $("#status");

@@ -79,13 +79,15 @@
           <div class="solvers">
             <button class="solver" data-algo="ksp">
               <span class="badge ksp">K</span>
-              <span class="solv-name">K-最短路徑</span>
-              <span class="solv-desc">Yen K 條 + corridor p-median · 推薦</span>
+              <span class="solv-name">K-最短路徑啟發式</span>
+              <span class="solv-desc">Yen's algorithm + 走廊 p-median facility location</span>
+              <span class="solv-tip">O(K·(V·log V + E))   · scales to 1000+ nodes</span>
             </button>
             <button class="solver" data-algo="mip">
               <span class="badge mip">M</span>
-              <span class="solv-name">MIP 最佳</span>
-              <span class="solv-desc">CP-SAT 聯合最佳化 · 小規模金標</span>
+              <span class="solv-name">混合整數規劃 (MILP)</span>
+              <span class="solv-desc">OR-Tools CP-SAT · MTZ subtour elimination</span>
+              <span class="solv-tip">NP-hard exact     · ≤200 nodes recommended</span>
             </button>
           </div>
         </div>
