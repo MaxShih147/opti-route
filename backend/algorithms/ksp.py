@@ -67,6 +67,12 @@ def solve_ksp(
     if not nx.has_path(Gbus, inst.source, inst.sink):
         raise RuntimeError("no bus-feasible path between A and B")
 
+    # Bus-reachable component containing A (== component containing B by the
+    # connectivity check above). Any stop we pick MUST live in this set,
+    # otherwise the path-repair Dijkstra will fail and we end up with
+    # "orphan" stops that the rendered route does not visit.
+    bus_component = nx.node_connected_component(Gbus, inst.source)
+
     # Generate candidate paths
     paths = _k_shortest_paths(Gbus, inst.source, inst.sink, k_paths, weight="weight")
 
@@ -82,11 +88,17 @@ def solve_ksp(
         path_len, path_weight = path_metrics(Gbus, path)
         cost_route = p.alpha_route * path_weight
 
-        # candidate stops = corridor around the path
+        # candidate stops = corridor around the path.
+        # Corridor expansion crosses forbidden edges (it operates on the full
+        # graph), so off-path corridor nodes can land in a different bus
+        # component than A. Filter them out so the path repair always works.
         corridor = _corridor_nodes(G, path, corridor_hops)
-        # exclude A/B (they're fixed); also prefer path nodes by listing first
+        on_path_set = set(path)
         on_path = [n for n in path if n != inst.source and n != inst.sink]
-        off_path = [n for n in corridor if n not in set(path)]
+        off_path = [
+            n for n in corridor
+            if n not in on_path_set and n in bus_component
+        ]
         candidates = on_path + off_path
 
         walk = compute_walk_distances(
@@ -157,9 +169,10 @@ def solve_ksp(
                 final_len = repair_len
                 final_weight = repair_weight
             else:
-                final_path = path
-                final_len = path_len
-                final_weight = path_weight
+                # Repair failed (should be rare now that off-path candidates
+                # are filtered to bus_component). Skip this path so we never
+                # report stops that the rendered route does not actually visit.
+                continue
         else:
             final_path = path
             final_len = path_len
@@ -183,7 +196,22 @@ def solve_ksp(
             best = (final_path, final_len, pmed, cost_route_final, cost_walk, cost_stops)
             best_path_idx = idx
 
-    assert best is not None
+    if best is None:
+        # Every candidate path's stop placement was infeasible to repair.
+        # Fall back to the bare geodesic with zero stops so we still answer.
+        path = paths[0]
+        path_len, path_weight = path_metrics(Gbus, path)
+        from .common import PMedianResult
+        pmed = PMedianResult(
+            chosen_stops=[],
+            assignment={pid: inst.source for pid in inst.passenger_ids},
+            walk_cost_per_passenger={pid: 0.0 for pid in inst.passenger_ids},
+            total_walk=0.0,
+            total_stop_fixed=0.0,
+        )
+        cost_route = p.alpha_route * path_weight
+        best = (path, path_len, pmed, cost_route, 0.0, 0.0)
+
     final_path, final_len, pmed, cost_route, cost_walk, cost_stops = best
 
     stops_info = [
