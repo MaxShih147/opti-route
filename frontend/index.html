@@ -60,13 +60,21 @@
       </section>
 
       <section class="panel">
-        <h2>4 · 求解</h2>
+        <h2>4 · KSP 進階</h2>
+        <label class="slider">
+          <span>k_paths · 候選路徑數 <em id="lbl-kp">6</em></span>
+          <input id="p-kp" type="range" min="1" max="20" value="6" />
+        </label>
+        <label class="slider">
+          <span>corridor_hops · 走廊寬度 <em id="lbl-corr">3</em></span>
+          <input id="p-corr" type="range" min="0" max="5" value="3" />
+        </label>
+        <p class="hint">corridor 越大 → KSP 越敢繞去服務乘客；實測 hops=3 為甜點。</p>
+      </section>
+
+      <section class="panel">
+        <h2>5 · 求解</h2>
         <div class="solvers">
-          <button class="solver" data-algo="two_phase">
-            <span class="badge b">B</span>
-            <span class="solv-name">兩階段</span>
-            <span class="solv-desc">Dijkstra + 路上 p-median · 最快</span>
-          </button>
           <button class="solver" data-algo="ksp">
             <span class="badge c">C</span>
             <span class="solv-name">K-最短路徑</span>
@@ -75,13 +83,13 @@
           <button class="solver" data-algo="mip">
             <span class="badge a">A</span>
             <span class="solv-name">MIP 最佳</span>
-            <span class="solv-desc">CP-SAT 聯合最佳化 · 小規模驗證</span>
+            <span class="solv-desc">CP-SAT 聯合最佳化 · 小規模金標</span>
           </button>
         </div>
       </section>
 
       <section class="panel results-panel" id="results-panel">
-        <h2>5 · 結果比較</h2>
+        <h2>6 · 結果比較</h2>
         <div id="results-empty" class="empty">尚未求解</div>
         <div id="results-table"></div>
       </section>

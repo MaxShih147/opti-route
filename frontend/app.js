@@ -8,7 +8,7 @@ const svgNS = "http://www.w3.org/2000/svg";
 let scene = null;
 let editMode = "none";
 let lastResults = []; // history of solves, for comparison
-const ALGO_LABELS = { two_phase: "兩階段 B", ksp: "K-最短 C", mip: "MIP 最佳 A" };
+const ALGO_LABELS = { ksp: "K-最短 C", mip: "MIP 最佳 A" };
 
 function status(text, kind = "") {
   const el = $("#status");
@@ -242,6 +242,8 @@ async function solve(algo) {
     alpha_route: +$("#p-alpha").value,
     beta_walk: +$("#p-beta").value,
     stop_fixed_cost: +$("#p-stop").value,
+    k_paths: +$("#p-kp").value,
+    corridor_hops: +$("#p-corr").value,
     mip_time_limit_s: 20.0,
   };
   try {
@@ -298,7 +300,10 @@ function renderResultsTable() {
 $("#btn-regen").addEventListener("click", regenerate);
 $$(".solver").forEach(btn => btn.addEventListener("click", () => solve(btn.dataset.algo)));
 
-for (const [id, lblId] of [["p-k","lbl-k"],["p-alpha","lbl-alpha"],["p-beta","lbl-beta"],["p-stop","lbl-stop"]]) {
+for (const [id, lblId] of [
+  ["p-k","lbl-k"], ["p-alpha","lbl-alpha"], ["p-beta","lbl-beta"], ["p-stop","lbl-stop"],
+  ["p-kp","lbl-kp"], ["p-corr","lbl-corr"],
+]) {
   const inp = $("#"+id), lbl = $("#"+lblId);
   inp.addEventListener("input", () => lbl.textContent = inp.value);
 }

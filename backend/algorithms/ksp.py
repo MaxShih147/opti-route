@@ -49,10 +49,19 @@ def _corridor_nodes(G: nx.Graph, path: list[int], hops: int) -> set[int]:
     return out
 
 
-def solve_ksp(inst: ProblemInstance, k_paths: int = 6, corridor_hops: int = 2) -> SolveResult:
+def solve_ksp(
+    inst: ProblemInstance,
+    k_paths: int | None = None,
+    corridor_hops: int | None = None,
+) -> SolveResult:
+    """Use overrides if passed; otherwise read from inst.params."""
     t0 = time.perf_counter()
     G = inst.G
     p = inst.params
+    if k_paths is None:
+        k_paths = p.k_paths
+    if corridor_hops is None:
+        corridor_hops = p.corridor_hops
 
     Gbus = bus_subgraph(G)
     if not nx.has_path(Gbus, inst.source, inst.sink):

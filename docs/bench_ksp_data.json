@@ -1,0 +1,732 @@
+[
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 0,
+    "ksp_total": 1593.5434850009838,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": 0.0,
+    "ksp_ms": 2.297084778547287
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 1,
+    "ksp_total": 1492.3575122828183,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -6.349746566100325,
+    "ksp_ms": 3.624957986176014
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 2,
+    "ksp_total": 1427.6211054170649,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -10.412165161832181,
+    "ksp_ms": 5.0650835037231445
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 3,
+    "ksp_total": 1373.008881105471,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -13.839258606449434,
+    "ksp_ms": 5.740500055253506
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 0,
+    "ksp_total": 1593.5434850009838,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": 0.0,
+    "ksp_ms": 2.1208757534623146
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 1,
+    "ksp_total": 1492.3575122828183,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -6.349746566100325,
+    "ksp_ms": 3.4813331440091133
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 2,
+    "ksp_total": 1427.6211054170649,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -10.412165161832181,
+    "ksp_ms": 4.966291598975658
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 3,
+    "ksp_total": 1373.008881105471,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -13.839258606449434,
+    "ksp_ms": 5.584165453910828
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 0,
+    "ksp_total": 1593.5434850009838,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": 0.0,
+    "ksp_ms": 2.092166803777218
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 1,
+    "ksp_total": 1492.3575122828183,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -6.349746566100325,
+    "ksp_ms": 3.4849997609853745
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 2,
+    "ksp_total": 1427.6211054170649,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -10.412165161832181,
+    "ksp_ms": 4.9419160932302475
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 3,
+    "ksp_total": 1373.008881105471,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -13.839258606449434,
+    "ksp_ms": 5.6027499958872795
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 0,
+    "ksp_total": 1593.5434850009838,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": 0.0,
+    "ksp_ms": 2.095665782690048
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 1,
+    "ksp_total": 1492.3575122828183,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -6.349746566100325,
+    "ksp_ms": 3.568333573639393
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 2,
+    "ksp_total": 1427.6211054170649,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -10.412165161832181,
+    "ksp_ms": 4.965458065271378
+  },
+  {
+    "scene": "small",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 3,
+    "ksp_total": 1373.008881105471,
+    "mip_ref": 1593.5434850009838,
+    "gap_pct": -13.839258606449434,
+    "ksp_ms": 5.560083314776421
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 3,
+    "corridor_hops": 0,
+    "ksp_total": 4367.845331650999,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": 2.1094794454303685,
+    "ksp_ms": 15.382332727313042
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 3,
+    "corridor_hops": 1,
+    "ksp_total": 4223.105488369829,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -1.2741820467376672,
+    "ksp_ms": 31.227583065629005
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 3,
+    "corridor_hops": 2,
+    "ksp_total": 3995.19888444606,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.602077821846432,
+    "ksp_ms": 30.756209045648575
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 3,
+    "corridor_hops": 3,
+    "ksp_total": 3964.992136857065,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -7.308237275273314,
+    "ksp_ms": 46.542792581021786
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 6,
+    "corridor_hops": 0,
+    "ksp_total": 4367.845331650999,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": 2.1094794454303685,
+    "ksp_ms": 33.07958319783211
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 6,
+    "corridor_hops": 1,
+    "ksp_total": 4010.7957404760073,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.237461694379017,
+    "ksp_ms": 60.87854225188494
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 6,
+    "corridor_hops": 2,
+    "ksp_total": 3995.19888444606,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.602077821846432,
+    "ksp_ms": 65.33558387309313
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 6,
+    "corridor_hops": 3,
+    "ksp_total": 3964.992136857065,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -7.308237275273314,
+    "ksp_ms": 94.88891717046499
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 10,
+    "corridor_hops": 0,
+    "ksp_total": 4277.610027368002,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": 0.0,
+    "ksp_ms": 55.68704195320606
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 10,
+    "corridor_hops": 1,
+    "ksp_total": 4010.7957404760073,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.237461694379017,
+    "ksp_ms": 103.49537525326014
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 10,
+    "corridor_hops": 2,
+    "ksp_total": 3995.19888444606,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.602077821846432,
+    "ksp_ms": 109.95345748960972
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 10,
+    "corridor_hops": 3,
+    "ksp_total": 3964.992136857065,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -7.308237275273314,
+    "ksp_ms": 157.71554224193096
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 20,
+    "corridor_hops": 0,
+    "ksp_total": 4277.610027368002,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": 0.0,
+    "ksp_ms": 113.23362495750189
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 20,
+    "corridor_hops": 1,
+    "ksp_total": 4010.7957404760073,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.237461694379017,
+    "ksp_ms": 202.41841673851013
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 20,
+    "corridor_hops": 2,
+    "ksp_total": 3995.19888444606,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -6.602077821846432,
+    "ksp_ms": 221.58983256667852
+  },
+  {
+    "scene": "medium",
+    "seed": 3,
+    "k_paths": 20,
+    "corridor_hops": 3,
+    "ksp_total": 3964.992136857065,
+    "mip_ref": 4277.610027368002,
+    "gap_pct": -7.308237275273314,
+    "ksp_ms": 314.994334243238
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 3,
+    "corridor_hops": 0,
+    "ksp_total": 5595.971030005301,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 41.719808222717916,
+    "ksp_ms": 9.235374629497528
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 3,
+    "corridor_hops": 1,
+    "ksp_total": 5219.778125634208,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 32.19259909737545,
+    "ksp_ms": 12.330375611782074
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 3,
+    "corridor_hops": 2,
+    "ksp_total": 4847.104160312641,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 22.754508261704668,
+    "ksp_ms": 17.05691684037447
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 3,
+    "corridor_hops": 3,
+    "ksp_total": 4514.128827379109,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 14.321798357881027,
+    "ksp_ms": 25.85858292877674
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 6,
+    "corridor_hops": 0,
+    "ksp_total": 5595.971030005301,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 41.719808222717916,
+    "ksp_ms": 19.185874611139297
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 6,
+    "corridor_hops": 1,
+    "ksp_total": 5219.778125634208,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 32.19259909737545,
+    "ksp_ms": 27.634666301310062
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 6,
+    "corridor_hops": 2,
+    "ksp_total": 4847.104160312641,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 22.754508261704668,
+    "ksp_ms": 34.15733389556408
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 6,
+    "corridor_hops": 3,
+    "ksp_total": 4514.128827379109,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 14.321798357881027,
+    "ksp_ms": 48.84645715355873
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 10,
+    "corridor_hops": 0,
+    "ksp_total": 5069.9627263171515,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 28.398474798629213,
+    "ksp_ms": 34.03366543352604
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 10,
+    "corridor_hops": 1,
+    "ksp_total": 4895.854987067261,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 23.98913899537327,
+    "ksp_ms": 50.21641589701176
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 10,
+    "corridor_hops": 2,
+    "ksp_total": 3836.339569745668,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": -2.843437682867128,
+    "ksp_ms": 64.37129061669111
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 10,
+    "corridor_hops": 3,
+    "ksp_total": 4514.128827379109,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 14.321798357881027,
+    "ksp_ms": 87.79191598296165
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 20,
+    "corridor_hops": 0,
+    "ksp_total": 5021.555722501275,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 27.172551494052016,
+    "ksp_ms": 68.94829031080008
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 20,
+    "corridor_hops": 1,
+    "ksp_total": 4226.33866138561,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 7.033417679301252,
+    "ksp_ms": 104.77804113179445
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 20,
+    "corridor_hops": 2,
+    "ksp_total": 3829.263494646098,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": -3.022641613820943,
+    "ksp_ms": 139.33937437832355
+  },
+  {
+    "scene": "medium",
+    "seed": 17,
+    "k_paths": 20,
+    "corridor_hops": 3,
+    "ksp_total": 4137.6682858371705,
+    "mip_ref": 3948.616005188933,
+    "gap_pct": 4.787811233095378,
+    "ksp_ms": 188.07324953377247
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 0,
+    "ksp_total": 5477.149197806998,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 52.1880558984655,
+    "ksp_ms": 10.281709022819996
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 1,
+    "ksp_total": 4949.060244005422,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 37.51457735734863,
+    "ksp_ms": 13.16625066101551
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 2,
+    "ksp_total": 4550.433717879308,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 26.438341554792366,
+    "ksp_ms": 17.30066630989313
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 3,
+    "corridor_hops": 3,
+    "ksp_total": 4472.046581496068,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 24.260276750863053,
+    "ksp_ms": 21.392500028014183
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 0,
+    "ksp_total": 5433.466611815797,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 50.974291657520546,
+    "ksp_ms": 21.612875163555145
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 1,
+    "ksp_total": 4949.060244005422,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 37.51457735734863,
+    "ksp_ms": 27.87166740745306
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 2,
+    "ksp_total": 4550.433717879308,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 26.438341554792366,
+    "ksp_ms": 35.706416703760624
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 3,
+    "ksp_total": 4472.046581496068,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 24.260276750863053,
+    "ksp_ms": 44.591750018298626
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 0,
+    "ksp_total": 5433.466611815797,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 50.974291657520546,
+    "ksp_ms": 36.385249346494675
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 1,
+    "ksp_total": 4949.060244005422,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 37.51457735734863,
+    "ksp_ms": 48.164707608520985
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 2,
+    "ksp_total": 4550.433717879308,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 26.438341554792366,
+    "ksp_ms": 60.571334324777126
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 3,
+    "ksp_total": 4301.551440527415,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 19.522899128478187,
+    "ksp_ms": 74.08304139971733
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 0,
+    "ksp_total": 5333.700900352684,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 48.20220181213572,
+    "ksp_ms": 73.21520894765854
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 1,
+    "ksp_total": 4789.219710080681,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 33.073248623503126,
+    "ksp_ms": 97.82924968749285
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 2,
+    "ksp_total": 4325.104809864577,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 20.177352998516344,
+    "ksp_ms": 122.04287573695183
+  },
+  {
+    "scene": "medium",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 3,
+    "ksp_total": 4000.247670928964,
+    "mip_ref": 3598.9349922842557,
+    "gap_pct": 11.150873230694112,
+    "ksp_ms": 151.40354167670012
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 1,
+    "ksp_total": 6264.185219983738,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": 9.901159415249547,
+    "ksp_ms": 106.0753334313631
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 2,
+    "ksp_total": 5605.456684837553,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": -1.6558152287190022,
+    "ksp_ms": 119.22120861709118
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 6,
+    "corridor_hops": 3,
+    "ksp_total": 5262.094145362978,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": -7.679893359045765,
+    "ksp_ms": 138.04420735687017
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 1,
+    "ksp_total": 6259.204179032218,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": 9.813770208761772,
+    "ksp_ms": 179.99291699379683
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 2,
+    "ksp_total": 5590.5094161024535,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": -1.91805558502875,
+    "ksp_ms": 200.84162428975105
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 10,
+    "corridor_hops": 3,
+    "ksp_total": 5262.094145362978,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": -7.679893359045765,
+    "ksp_ms": 243.14795900136232
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 1,
+    "ksp_total": 6259.204179032218,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": 9.813770208761772,
+    "ksp_ms": 361.19075026363134
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 2,
+    "ksp_total": 5590.5094161024535,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": -1.91805558502875,
+    "ksp_ms": 409.1611662879586
+  },
+  {
+    "scene": "default",
+    "seed": 42,
+    "k_paths": 20,
+    "corridor_hops": 3,
+    "ksp_total": 5262.094145362978,
+    "mip_ref": 5699.835427864047,
+    "gap_pct": -7.679893359045765,
+    "ksp_ms": 482.58608393371105
+  }
+]

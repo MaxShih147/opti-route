@@ -39,12 +39,15 @@ class Scene(BaseModel):
 
 
 class SolveParams(BaseModel):
-    algorithm: str = Field(..., description="'two_phase' | 'iterative' | 'mip'")
+    algorithm: str = Field(..., description="'ksp' | 'mip' (legacy: 'two_phase')")
     max_stops: int = 5
     alpha_route: float = 1.0     # weight on route length
     beta_walk: float = 1.0       # weight on passenger walking
     stop_fixed_cost: float = 50.0
-    max_iter: int = 10           # for iterative
+    # KSP-specific knobs (defaults chosen from bench_ksp sweep results)
+    k_paths: int = 6
+    corridor_hops: int = 3
+    # MIP-specific
     mip_time_limit_s: float = 20.0
 
 

@@ -167,7 +167,17 @@ def path_metrics(G: nx.Graph, path: list[int]) -> tuple[float, float]:
 
 def bus_subgraph(G: nx.Graph) -> nx.Graph:
     """
-    Return view of G excluding forbidden edges (for the bus path only).
-    Pedestrians use G itself (they can step around barriers).
+    Return G with forbidden edges removed but all nodes preserved.
+    Pedestrians use the full G (they can step around barriers).
+
+    Built manually rather than via nx.edge_subgraph, which would drop any
+    node whose every incident edge is forbidden — that produced spurious
+    "source/sink not in graph" errors when forbidden zones isolated an
+    endpoint in small scenes.
     """
-    return G.edge_subgraph([(u, v) for u, v, d in G.edges(data=True) if not d.get("forbidden", False)])
+    H = nx.Graph()
+    H.add_nodes_from(G.nodes(data=True))
+    for u, v, d in G.edges(data=True):
+        if not d.get("forbidden", False):
+            H.add_edge(u, v, **d)
+    return H
