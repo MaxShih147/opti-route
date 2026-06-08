@@ -212,7 +212,14 @@ async function apiPost(path, body) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error(`${path} ${r.status}: ${await r.text()}`);
+  if (!r.ok) {
+    const text = await r.text();
+    let detail = text;
+    try { detail = JSON.parse(text).detail || text; } catch {}
+    const err = new Error(detail);
+    err.status = r.status;
+    throw err;
+  }
   return r.json();
 }
 
@@ -276,7 +283,18 @@ async function solve(algo) {
     if (result.optimality_gap != null) s += ` · gap ${(result.optimality_gap*100).toFixed(1)}%`;
     status(s);
   } catch (e) {
-    status("求解失敗: " + e.message, "error");
+    const msg = (e && e.message) || "";
+    let pretty;
+    if (/no bus-feasible path|no path|disconnected/i.test(msg)) {
+      pretty = `${ALGO_LABELS[algo]} · 無解 — A 與 B 在禁區阻隔下不連通`;
+    } else if (/no feasible solution|INFEASIBLE/i.test(msg)) {
+      pretty = `${ALGO_LABELS[algo]} · 無解 — 模型在限制下無可行解`;
+    } else if (e && e.status === 422) {
+      pretty = `${ALGO_LABELS[algo]} · 無解 — ${msg}`;
+    } else {
+      pretty = `求解失敗: ${msg}`;
+    }
+    status(pretty, "error");
   } finally {
     btn.disabled = false;
   }

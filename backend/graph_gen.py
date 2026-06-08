@@ -32,7 +32,7 @@ class GenParams:
     terrain_octaves: int = 3
     terrain_amplitude: float = 0.8    # multiplicative range [1-amp, 1+amp]
     forbidden_zones: int = 2
-    forbidden_radius_cells: tuple[int, int] = (1, 3)
+    forbidden_radius_cells: tuple[int, int] = (1, 2)   # ≤ ~8 intersections covered
     n_passengers: int = 30
     seed: int = 42
 
@@ -136,20 +136,48 @@ def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, l
             node_id_of[(r, c)] = nid
             nid += 1
 
-    # forbidden zones (amoeba-shaped smooth blobs)
+    # forbidden zones (amoeba blobs with hard caps on intersection coverage)
+    # Constraints:
+    #   - per-zone coverage: ≤ 4 nodes if city scale < 200 else ≤ 8
+    #   - pairwise overlap : any two zones share ≤ 3 nodes
+    # If a candidate violates either, shrink/retry up to 40 attempts.
+    scale = R * C
+    max_cov = 4 if scale < 200 else 8
+    MAX_PAIR_OVERLAP = 3
+
+    # quick lookup: (x, y, node_id) for coverage counting
+    node_xy_list = [(G.nodes[n]["x"], G.nodes[n]["y"], n) for n in G.nodes()]
+
+    def _covered_set(points):
+        return {n for x, y, n in node_xy_list if _point_in_polygon(x, y, points)}
+
     forbidden_zones = []
-    for _ in range(p.forbidden_zones):
-        rc = rng.randint(2, max(2, R - 3))
-        cc = rng.randint(2, max(2, C - 3))
-        rad_cells = rng.randint(*p.forbidden_radius_cells)
-        cx = cc * cs + cs
-        cy = rc * cs + cs
-        radius = rad_cells * cs
-        points = _amoeba_points(cx, cy, radius, rng)
-        forbidden_zones.append({
-            "cx": cx, "cy": cy, "r": radius,
-            "points": points,
-        })
+    zone_covered_sets: list[set] = []  # parallel to forbidden_zones, internal use
+    for _zone_i in range(p.forbidden_zones):
+        placed = False
+        for _attempt in range(40):
+            rc = rng.randint(2, max(2, R - 3))
+            cc = rng.randint(2, max(2, C - 3))
+            cx = cc * cs + cs
+            cy = rc * cs + cs
+            for rad_cells in range(p.forbidden_radius_cells[1], 0, -1):
+                radius = rad_cells * cs
+                points = _amoeba_points(cx, cy, radius, rng)
+                covered = _covered_set(points)
+                if len(covered) > max_cov:
+                    continue
+                # pairwise overlap check
+                if any(len(covered & s) > MAX_PAIR_OVERLAP for s in zone_covered_sets):
+                    continue
+                forbidden_zones.append({
+                    "cx": cx, "cy": cy, "r": radius, "points": points,
+                })
+                zone_covered_sets.append(covered)
+                placed = True
+                break
+            if placed:
+                break
+        # if no valid spot after 40 attempts, silently skip this zone
 
     def _point_in_any_zone(px, py):
         for z in forbidden_zones:

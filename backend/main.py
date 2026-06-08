@@ -115,12 +115,19 @@ def api_solve(params: SolveParams) -> SolveResult:
         raise HTTPException(400, "no scene generated yet")
     inst = STATE.to_problem(params)
     if params.algorithm == "two_phase":
-        return solve_two_phase(inst)
-    if params.algorithm == "ksp":
-        return solve_ksp(inst)
-    if params.algorithm == "mip":
-        return solve_mip(inst)
-    raise HTTPException(400, f"unknown algorithm: {params.algorithm}")
+        solver = solve_two_phase
+    elif params.algorithm == "ksp":
+        solver = solve_ksp
+    elif params.algorithm == "mip":
+        solver = solve_mip
+    else:
+        raise HTTPException(400, f"unknown algorithm: {params.algorithm}")
+    # Convert solver RuntimeErrors (infeasibility, disconnected graphs, etc.)
+    # into a structured 422 so the frontend can show "無解" instead of 500.
+    try:
+        return solver(inst)
+    except RuntimeError as e:
+        raise HTTPException(422, str(e))
 
 
 @app.post("/api/edit")
