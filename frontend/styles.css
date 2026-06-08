@@ -51,8 +51,23 @@ html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: 
 /* Prevent flex column from squishing panels — let them stay natural size
    so the sidebar overflows and scrolls instead. */
 .sidebar > * { flex-shrink: 0; }
+.brand { position: relative; }
 .brand h1 { margin: 0 0 2px; font-size: 22px; letter-spacing: -0.4px; font-weight: 600; }
 .brand .tagline { margin: 0; color: var(--text-dim); font-size: 11.5px; }
+.brand-about {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.brand-about:hover { color: var(--text); border-color: var(--accent); }
 
 .panel {
   background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;

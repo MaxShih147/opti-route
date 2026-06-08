@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>about · opti-route</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    body { display: block; }
+    .about-shell {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 56px 32px 80px;
+      color: var(--text);
+    }
+    .about-shell header h1 {
+      margin: 0 0 6px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+    }
+    .about-shell header p.tag {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .about-shell hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+    .about-shell section {
+      margin-bottom: 28px;
+    }
+    .about-shell h2 {
+      margin: 0 0 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+    .about-shell p,
+    .about-shell li {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .about-shell ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .about-shell ul li {
+      margin-bottom: 14px;
+      padding-left: 14px;
+      border-left: 2px solid var(--accent-3);
+    }
+    .about-shell ul li strong {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .about-shell ul li span {
+      color: var(--text-dim);
+      font-size: 12.5px;
+    }
+    .author {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .author .name {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+    .author .role {
+      color: var(--text-dim);
+      font-size: 12.5px;
+    }
+    .about-shell a {
+      color: var(--accent-2);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 120ms ease;
+    }
+    .about-shell a:hover {
+      border-bottom-color: var(--accent-2);
+    }
+    .stack {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 6px 14px;
+      font-size: 13px;
+    }
+    .stack dt { color: var(--text-dim); }
+    .stack dd { margin: 0; color: var(--text); }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: var(--text);
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      border-bottom-color: var(--accent) !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="about-shell">
+
+    <header>
+      <h1>opti-route</h1>
+      <p class="tag">公車路線與站點設置規劃</p>
+    </header>
+
+    <hr />
+
+    <section>
+      <h2>作者</h2>
+      <div class="author">
+        <span class="name">Max Shih</span>
+        <span class="role">圖論 / 最佳化 業餘研究</span>
+      </div>
+      <p>
+        GitHub:
+        <a href="https://github.com/MaxShih147" target="_blank" rel="noopener">
+          github.com/MaxShih147
+        </a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/MaxShih147/opti-route" target="_blank" rel="noopener">
+          專案原始碼
+        </a>
+      </p>
+    </section>
+
+    <section>
+      <h2>關於這個專案</h2>
+      <p>
+        傳統上「公車主路線設計」與「站點選址」會被當作兩個分開的問題處理 —
+        先決定路線、再決定停哪裡。
+        這個專案把它們建模為**單一聯合最佳化問題**：
+        在避開禁區、考量地形成本、預算限制的前提下，
+        同時決定路線形狀與站點位置，
+        最小化路線營運成本、站點建設成本、以及所有乘客的步行距離。
+      </p>
+      <p>
+        起點是好奇：當「最短路徑」跟「設施選址」這兩個經典圖論問題糾纏在一起，
+        會冒出什麼樣的解空間？哪些技巧可以利用？實務上能跑多大規模？
+        於是寫了這個 demo 同時實作兩種風格的解法並排比較。
+      </p>
+    </section>
+
+    <section>
+      <h2>兩種解法</h2>
+      <ul>
+        <li>
+          <strong>K-最短路徑啟發式</strong>
+          <span>
+            Yen's algorithm 產生 K 條候選路線，每條路線在其走廊內求解
+            p-median facility location，挑出總成本最低的組合。
+            擴展性好，大規模仍能在亞秒級回應。
+          </span>
+        </li>
+        <li>
+          <strong>混合整數規劃 (MILP)</strong>
+          <span>
+            用 OR-Tools CP-SAT 把問題寫成完整 MILP，
+            含 MTZ subtour elimination 避免出現分離環。
+            提供最佳性證明，小規模時當作啟發式的金標。
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>技術棧</h2>
+      <dl class="stack">
+        <dt>後端</dt><dd>FastAPI · NetworkX · Google OR-Tools (CP-SAT)</dd>
+        <dt>前端</dt><dd>純 SVG + vanilla JS · 無框架</dd>
+        <dt>地圖</dt><dd>程序化生成的擾化網格 + 主幹道 + 阿米巴形禁區</dd>
+      </dl>
+    </section>
+
+    <a class="back-link" href="/">← 回到 demo</a>
+
+  </main>
+</body>
+</html>

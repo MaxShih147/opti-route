@@ -187,3 +187,7 @@ if FRONTEND_DIR.exists():
     @app.get("/")
     def index():
         return FileResponse(FRONTEND_DIR / "index.html")
+
+    @app.get("/about")
+    def about():
+        return FileResponse(FRONTEND_DIR / "about.html")
