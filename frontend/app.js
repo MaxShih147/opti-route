@@ -53,22 +53,29 @@ function renderScene() {
   const nodeById = {};
   for (const n of scene.nodes) nodeById[n.id] = n;
 
-  // forbidden zones first (background)
+  // forbidden zones — amoeba polygons
   clear(layers.forbidden);
   for (const z of scene.forbidden_zones || []) {
-    el("circle", { cx: z.cx, cy: z.cy, r: z.r, class: "forbidden-zone" }, layers.forbidden);
+    if (z.points && z.points.length > 2) {
+      const pts = z.points.map(p => p.join(",")).join(" ");
+      el("polygon", { points: pts, class: "forbidden-zone" }, layers.forbidden);
+    } else {
+      // legacy fallback: disk shape
+      el("circle", { cx: z.cx, cy: z.cy, r: z.r, class: "forbidden-zone" }, layers.forbidden);
+    }
   }
 
-  // terrain overlay (per-node colored dots)
+  // terrain overlay — vivid cyan (cheap) → vivid coral (expensive)
+  // bigger radius so neighbouring dots overlap into a smooth wash.
   clear(layers.terrain);
   const tg = el("g", { class: "terrain-overlay" }, layers.terrain);
   for (const n of scene.nodes) {
     const t = n.terrain; // 0.2 .. 1.8 typical
     const norm = Math.max(0, Math.min(1, (t - 0.4) / 1.2));
-    // blue (low cost) to red (high cost)
-    const r = Math.floor(40 + 140 * norm);
-    const g = Math.floor(60 + 30 * (1 - Math.abs(norm - 0.5) * 2));
-    const b = Math.floor(160 - 140 * norm);
+    // gradient: cyan #00d4ff → coral #ff5a3a
+    const r = Math.floor(0 + 255 * norm);
+    const g = Math.floor(212 - 122 * norm);
+    const b = Math.floor(255 - 197 * norm);
     el("circle", { cx: n.x, cy: n.y, r: 14, fill: `rgb(${r},${g},${b})` }, tg);
   }
 
@@ -208,11 +215,15 @@ async function loadScene() {
 
 async function regenerate() {
   status("生成中…", "busy");
+  // 城市規模 → row × col 約略平方分解，城市偏橫向：cols ≥ rows
+  const scale = Math.max(16, +$("#g-scale").value);
+  const cols = Math.max(4, Math.ceil(Math.sqrt(scale)));
+  const rows = Math.max(4, Math.floor(scale / cols));
   const params = {
-    rows: +$("#g-rows").value,
-    cols: +$("#g-cols").value,
+    rows,
+    cols,
     n_passengers: +$("#g-pass").value,
-    seed: +$("#g-seed").value,
+    seed: Math.floor(Math.random() * 1000000),
     edge_drop_rate: (+$("#g-drop").value) / 100,
     forbidden_zones: +$("#g-forb").value,
     arterial_count: 4,
@@ -236,14 +247,16 @@ async function solve(algo) {
   const btn = $(`button.solver[data-algo="${algo}"]`);
   btn.disabled = true;
   status(`求解中 (${ALGO_LABELS[algo]}) …`, "busy");
+  const kpInput = $("#p-kp");
+  const corrInput = $("#p-corr");
   const params = {
     algorithm: algo,
     max_stops: +$("#p-k").value,
     alpha_route: +$("#p-alpha").value,
     beta_walk: +$("#p-beta").value,
     stop_fixed_cost: +$("#p-stop").value,
-    k_paths: +$("#p-kp").value,
-    corridor_hops: +$("#p-corr").value,
+    k_paths: kpInput ? +kpInput.value : 6,
+    corridor_hops: corrInput ? +corrInput.value : 3,
     mip_time_limit_s: 20.0,
   };
   try {
@@ -297,15 +310,8 @@ function renderResultsTable() {
 
 // ---------------- Wire up controls ----------------
 
+// "生成城市" button: each click generates a fresh random seed internally.
 $("#btn-regen").addEventListener("click", regenerate);
 $$(".solver").forEach(btn => btn.addEventListener("click", () => solve(btn.dataset.algo)));
-
-for (const [id, lblId] of [
-  ["p-k","lbl-k"], ["p-alpha","lbl-alpha"], ["p-beta","lbl-beta"], ["p-stop","lbl-stop"],
-  ["p-kp","lbl-kp"], ["p-corr","lbl-corr"],
-]) {
-  const inp = $("#"+id), lbl = $("#"+lblId);
-  inp.addEventListener("input", () => lbl.textContent = inp.value);
-}
 
 loadScene().catch(e => status("載入失敗: " + e.message, "error"));

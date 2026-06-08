@@ -14,104 +14,115 @@
         <p class="tagline">公車主路線 + 站點選址聯合最佳化</p>
       </header>
 
-      <section class="panel">
-        <h2>1 · 城市生成</h2>
-        <div class="grid2">
-          <label>rows<input id="g-rows" type="number" value="12" min="4" max="30" /></label>
-          <label>cols<input id="g-cols" type="number" value="16" min="4" max="30" /></label>
-          <label>passengers<input id="g-pass" type="number" value="30" min="0" max="200" /></label>
-          <label>seed<input id="g-seed" type="number" value="42" /></label>
-          <label>drop %<input id="g-drop" type="number" value="12" min="0" max="50" step="1" /></label>
-          <label>禁區數<input id="g-forb" type="number" value="2" min="0" max="6" /></label>
+      <details class="panel" open>
+        <summary><h2>城市生成</h2><span class="chevron"></span></summary>
+        <div class="panel-body">
+          <div class="grid2">
+            <label>城市規模<input id="g-scale" type="number" value="192" min="16" max="900" step="1" /></label>
+            <label>乘客數<input id="g-pass" type="number" value="30" min="0" max="200" /></label>
+            <label>drop %<input id="g-drop" type="number" value="12" min="0" max="50" step="1" /></label>
+            <label>禁區數<input id="g-forb" type="number" value="2" min="0" max="6" /></label>
+          </div>
+          <button id="btn-regen" class="primary block">生成城市</button>
         </div>
-        <button id="btn-regen" class="primary block">🎲 重新生成城市</button>
-      </section>
+      </details>
 
-      <section class="panel">
-        <h2>2 · 編輯模式</h2>
-        <div class="modes">
-          <button class="mode active" data-mode="none">瀏覽</button>
-          <button class="mode" data-mode="set_source">移動 A</button>
-          <button class="mode" data-mode="set_sink">移動 B</button>
-          <button class="mode" data-mode="add_passenger">+ 乘客</button>
-          <button class="mode" data-mode="delete_passenger">− 乘客</button>
+      <!-- 編輯模式 panel hidden per request — kept in source for easy restore.
+      <details class="panel" open>
+        <summary><h2>編輯模式</h2><span class="chevron"></span></summary>
+        <div class="panel-body">
+          <div class="modes">
+            <button class="mode active" data-mode="none">瀏覽</button>
+            <button class="mode" data-mode="set_source">移動 A</button>
+            <button class="mode" data-mode="set_sink">移動 B</button>
+            <button class="mode" data-mode="add_passenger">+ 乘客</button>
+            <button class="mode" data-mode="delete_passenger">− 乘客</button>
+          </div>
+          <p class="hint">點地圖節點放置；乘客會自動 snap 到最近節點。</p>
         </div>
-        <p class="hint">點地圖節點放置；乘客會自動 snap 到最近節點。</p>
-      </section>
+      </details>
+      -->
 
-      <section class="panel">
-        <h2>3 · 成本參數</h2>
-        <label class="slider">
-          <span>K · 最多站數 <em id="lbl-k">5</em></span>
-          <input id="p-k" type="range" min="1" max="10" value="5" />
-        </label>
-        <label class="slider">
-          <span>α · 路線權重 <em id="lbl-alpha">1.0</em></span>
-          <input id="p-alpha" type="range" min="0" max="5" step="0.1" value="1.0" />
-        </label>
-        <label class="slider">
-          <span>β · 步行權重 <em id="lbl-beta">1.0</em></span>
-          <input id="p-beta" type="range" min="0" max="5" step="0.1" value="1.0" />
-        </label>
-        <label class="slider">
-          <span>站建設成本 <em id="lbl-stop">50</em></span>
-          <input id="p-stop" type="range" min="0" max="500" step="10" value="50" />
-        </label>
-      </section>
 
-      <section class="panel">
-        <h2>4 · KSP 進階</h2>
-        <label class="slider">
-          <span>k_paths · 候選路徑數 <em id="lbl-kp">6</em></span>
-          <input id="p-kp" type="range" min="1" max="20" value="6" />
-        </label>
-        <label class="slider">
-          <span>corridor_hops · 走廊寬度 <em id="lbl-corr">3</em></span>
-          <input id="p-corr" type="range" min="0" max="5" value="3" />
-        </label>
-        <p class="hint">corridor 越大 → KSP 越敢繞去服務乘客；實測 hops=3 為甜點。</p>
-      </section>
-
-      <section class="panel">
-        <h2>5 · 求解</h2>
-        <div class="solvers">
-          <button class="solver" data-algo="ksp">
-            <span class="badge c">C</span>
-            <span class="solv-name">K-最短路徑</span>
-            <span class="solv-desc">Yen K 條 + corridor p-median · 推薦</span>
-          </button>
-          <button class="solver" data-algo="mip">
-            <span class="badge a">A</span>
-            <span class="solv-name">MIP 最佳</span>
-            <span class="solv-desc">CP-SAT 聯合最佳化 · 小規模金標</span>
-          </button>
+      <details class="panel" open>
+        <summary><h2>成本參數</h2><span class="chevron"></span></summary>
+        <div class="panel-body">
+          <div class="grid2">
+            <label>K · 最多站數<input id="p-k" type="number" value="5" min="1" max="10" step="1" /></label>
+            <label>α · 路線權重<input id="p-alpha" type="number" value="1.0" min="0" max="5" step="0.1" /></label>
+            <label>β · 步行權重<input id="p-beta" type="number" value="1.0" min="0" max="5" step="0.1" /></label>
+            <label>站建設成本<input id="p-stop" type="number" value="50" min="0" max="500" step="1" /></label>
+          </div>
         </div>
-      </section>
+      </details>
 
-      <section class="panel results-panel" id="results-panel">
-        <h2>6 · 結果比較</h2>
-        <div id="results-empty" class="empty">尚未求解</div>
-        <div id="results-table"></div>
-      </section>
+      <!-- KSP 進階參數 panel hidden per request — kept in source for easy restore.
+      <details class="panel">
+        <summary><h2>KSP 進階</h2><span class="chevron"></span></summary>
+        <div class="panel-body">
+          <label class="slider">
+            <span>k_paths · 候選路徑數 <em id="lbl-kp">6</em></span>
+            <input id="p-kp" type="range" min="1" max="20" value="6" />
+          </label>
+          <label class="slider">
+            <span>corridor_hops · 走廊寬度 <em id="lbl-corr">3</em></span>
+            <input id="p-corr" type="range" min="0" max="5" value="3" />
+          </label>
+          <p class="hint">corridor 越大 → KSP 越敢繞去服務乘客；實測 hops=3 為甜點。</p>
+        </div>
+      </details>
+      -->
 
-      <footer class="legend">
-        <div><span class="dot src"></span>A 起點</div>
-        <div><span class="dot sink"></span>B 終點</div>
-        <div><span class="dot pass"></span>乘客</div>
-        <div><span class="dot stop"></span>站牌</div>
-        <div><span class="dot forb"></span>禁區（公車不可走）</div>
-      </footer>
+      <details class="panel" open>
+        <summary><h2>求解</h2><span class="chevron"></span></summary>
+        <div class="panel-body">
+          <div class="solvers">
+            <button class="solver" data-algo="ksp">
+              <span class="badge ksp">K</span>
+              <span class="solv-name">K-最短路徑</span>
+              <span class="solv-desc">Yen K 條 + corridor p-median · 推薦</span>
+            </button>
+            <button class="solver" data-algo="mip">
+              <span class="badge mip">M</span>
+              <span class="solv-name">MIP 最佳</span>
+              <span class="solv-desc">CP-SAT 聯合最佳化 · 小規模金標</span>
+            </button>
+          </div>
+        </div>
+      </details>
+
+      <details class="panel" open>
+        <summary><h2>結果比較</h2><span class="chevron"></span></summary>
+        <div class="panel-body">
+          <div id="results-empty" class="empty">尚未求解</div>
+          <div id="results-table"></div>
+        </div>
+      </details>
+
     </aside>
 
     <main class="viewport">
       <div class="toolbar">
         <div class="status" id="status">Ready</div>
-        <div class="legend-inline">
-          <span><span class="swatch arterial"></span>主幹道</span>
-          <span><span class="swatch street"></span>支路</span>
-          <span><span class="swatch terrain-lo"></span>低地形成本</span>
-          <span><span class="swatch terrain-hi"></span>高地形成本</span>
-        </div>
+
+        <details class="legend-box" open>
+          <summary class="legend-head">
+            <span>圖例</span>
+            <span class="chevron"></span>
+          </summary>
+          <div class="legend-grid">
+            <div><span class="dot src"></span>A 起點</div>
+            <div><span class="dot sink"></span>B 終點</div>
+            <div><span class="dot pass"></span>乘客</div>
+            <div><span class="dot stop"></span>站牌</div>
+            <div><span class="dot forb"></span>禁區</div>
+            <div><span class="swatch route"></span>公車路線</div>
+            <div><span class="swatch arterial"></span>快速道路</div>
+            <div><span class="swatch street"></span>一般道路</div>
+            <div><span class="swatch terrain-lo"></span>地形便宜</div>
+            <div><span class="swatch terrain-hi"></span>地形昂貴</div>
+          </div>
+        </details>
       </div>
       <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
     </main>

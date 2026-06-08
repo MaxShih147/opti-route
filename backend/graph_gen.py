@@ -69,6 +69,44 @@ def _point_in_disk(px: float, py: float, cx: float, cy: float, r: float) -> bool
     return (px - cx) ** 2 + (py - cy) ** 2 <= r * r
 
 
+def _amoeba_points(cx: float, cy: float, base_r: float, rng: random.Random,
+                   n: int = 28) -> list[list[float]]:
+    """
+    Smooth irregular blob (amoeba-like) sampled at n equally-spaced angles.
+    Sums a few low-harmonic sines to deform a circle gently in/out.
+    """
+    harmonics = [
+        (rng.uniform(0.10, 0.22), rng.uniform(0, 2 * math.pi), 2),
+        (rng.uniform(0.06, 0.16), rng.uniform(0, 2 * math.pi), 3),
+        (rng.uniform(0.04, 0.10), rng.uniform(0, 2 * math.pi), 5),
+    ]
+    pts = []
+    for i in range(n):
+        theta = 2 * math.pi * i / n
+        r = base_r
+        for amp, phase, k in harmonics:
+            r *= 1 + amp * math.sin(k * theta + phase)
+        pts.append([cx + r * math.cos(theta), cy + r * math.sin(theta)])
+    return pts
+
+
+def _point_in_polygon(px: float, py: float, poly: list[list[float]]) -> bool:
+    inside = False
+    n = len(poly)
+    if n < 3:
+        return False
+    j = n - 1
+    for i in range(n):
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        if (yi > py) != (yj > py):
+            x_cross = (xj - xi) * (py - yi) / (yj - yi) + xi
+            if px < x_cross:
+                inside = not inside
+        j = i
+    return inside
+
+
 def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, list[dict]]:
     """
     Returns:
@@ -98,29 +136,41 @@ def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, l
             node_id_of[(r, c)] = nid
             nid += 1
 
-    # forbidden zones (disks)
+    # forbidden zones (amoeba-shaped smooth blobs)
     forbidden_zones = []
     for _ in range(p.forbidden_zones):
-        rc = rng.randint(2, R - 3)
-        cc = rng.randint(2, C - 3)
+        rc = rng.randint(2, max(2, R - 3))
+        cc = rng.randint(2, max(2, C - 3))
         rad_cells = rng.randint(*p.forbidden_radius_cells)
         cx = cc * cs + cs
         cy = rc * cs + cs
         radius = rad_cells * cs
-        forbidden_zones.append({"cx": cx, "cy": cy, "r": radius})
+        points = _amoeba_points(cx, cy, radius, rng)
+        forbidden_zones.append({
+            "cx": cx, "cy": cy, "r": radius,
+            "points": points,
+        })
+
+    def _point_in_any_zone(px, py):
+        for z in forbidden_zones:
+            # quick bounding-circle reject, then exact polygon test
+            if (px - z["cx"]) ** 2 + (py - z["cy"]) ** 2 > (z["r"] * 1.3) ** 2:
+                continue
+            if _point_in_polygon(px, py, z["points"]):
+                return True
+        return False
 
     def is_forbidden_edge(u, v):
         ux, uy = G.nodes[u]["x"], G.nodes[u]["y"]
         vx, vy = G.nodes[v]["x"], G.nodes[v]["y"]
         mx, my = (ux + vx) / 2, (uy + vy) / 2
-        for z in forbidden_zones:
-            if _point_in_disk(mx, my, z["cx"], z["cy"], z["r"]):
-                return True
-            # also check endpoints
-            if _point_in_disk(ux, uy, z["cx"], z["cy"], z["r"]):
-                return True
-            if _point_in_disk(vx, vy, z["cx"], z["cy"], z["r"]):
-                return True
+        # sample midpoint + endpoints — covers both crossing and entering
+        if _point_in_any_zone(mx, my):
+            return True
+        if _point_in_any_zone(ux, uy):
+            return True
+        if _point_in_any_zone(vx, vy):
+            return True
         return False
 
     # lattice edges (4-connected) with random drop
@@ -178,25 +228,32 @@ def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, l
         largest = max(nx.connected_components(G), key=len)
         G = G.subgraph(largest).copy()
 
-    # Verify bus subgraph (forbidden removed) keeps source/sink in same component.
-    bus_edges = [(u, v) for u, v, d in G.edges(data=True) if not d.get("forbidden", False)]
+    # Build bus subgraph (forbidden edges removed) and find its largest
+    # connected component — A and B MUST live in here, otherwise the bus has
+    # no feasible route between them.
     H = nx.Graph()
     H.add_nodes_from(G.nodes(data=True))
-    H.add_edges_from((u, v, G[u][v]) for u, v in bus_edges)
-    # (connectivity check happens later when source/sink are chosen)
-    _ = H  # noqa: F841  (kept for clarity; actual check in caller if needed)
+    for u, v, d in G.edges(data=True):
+        if not d.get("forbidden", False):
+            H.add_edge(u, v, **d)
+
+    bus_components = list(nx.connected_components(H))
+    if not bus_components:
+        raise RuntimeError("bus subgraph has no edges; loosen forbidden zone params")
+    bus_main = max(bus_components, key=len)
 
     nodes_remaining = list(G.nodes())
     if len(nodes_remaining) < 4:
         raise RuntimeError("generated graph too small after pruning; loosen params")
 
-    # pick A and B as far-apart nodes
-    # A near top-left, B near bottom-right
+    # A near top-left, B near bottom-right — but both confined to the bus's
+    # largest connected component so a feasible path is guaranteed.
     def dist_to_corner(n, cx, cy):
         return (G.nodes[n]["x"] - cx) ** 2 + (G.nodes[n]["y"] - cy) ** 2
 
-    source = min(nodes_remaining, key=lambda n: dist_to_corner(n, cs, cs))
-    sink = min(nodes_remaining, key=lambda n: dist_to_corner(n, (C - 1) * cs + cs, (R - 1) * cs + cs))
+    bus_candidates = [n for n in nodes_remaining if n in bus_main]
+    source = min(bus_candidates, key=lambda n: dist_to_corner(n, cs, cs))
+    sink = min(bus_candidates, key=lambda n: dist_to_corner(n, (C - 1) * cs + cs, (R - 1) * cs + cs))
 
     # passengers: scatter around the map, then snap to nearest node
     passengers = []
@@ -207,8 +264,7 @@ def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, l
         px = rng.uniform(cs * 0.5, w - cs * 0.5)
         py = rng.uniform(cs * 0.5, h - cs * 0.5)
         # avoid placing inside forbidden zones
-        in_forb = any(_point_in_disk(px, py, z["cx"], z["cy"], z["r"]) for z in forbidden_zones)
-        if in_forb:
+        if _point_in_any_zone(px, py):
             # retry once, else accept anyway (the node snap will pull them out)
             px = rng.uniform(cs * 0.5, w - cs * 0.5)
             py = rng.uniform(cs * 0.5, h - cs * 0.5)
