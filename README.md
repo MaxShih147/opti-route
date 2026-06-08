@@ -80,7 +80,100 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 ---
 
-## 2 · 為什麼最後選 KSP + MIP（而非其他方法）
+## 2 · 題目歧義與我的解讀（顯式假設）
+
+題目原文有 10 處未明確定義。下面把我的解讀全部列出來，並標註是「題目沒講」還是「題目語意有歧義」。**面試展示時這節最值得攤開來討論** — 它證明我意識到題目的不確定性、做了明確選擇、可以隨時被挑戰修正。
+
+### 2.1 速查表
+
+| # | 題目原文 / 缺什麼 | 我的解讀 | 類型 |
+|---|---|---|---|
+| 1 | 「最多設**若干個**」站 — K 沒給 | K 是 UI 滑桿，1~10 | 沒講 |
+| 2 | 「每站固定成本 **+** 當地地形加成」 | **乘法**：`stop_fixed_cost × terrain_v`，不是加法 | 歧義 |
+| 3 | 「公車路線可**轉折**」 — 可不可以重複走？ | KSP 允許 spur 支線；MIP 強制簡單路徑 — **兩個並陳** | 沒講 |
+| 4 | 「**不同的成本權重**」 | α, β 是 UI 滑桿；γ 用 stop_fixed_cost 取代 | 沒講 |
+| 5 | 「乘客**走到**最近站牌的成本」 | full graph Dijkstra by `length`；行人能穿越禁區 | 沒講 |
+| 6 | 「公車路線本身**避開禁區**」 | 禁區是**邊**；公車嚴格禁止；行人可走 | 沒講 |
+| 7 | 「**設站**」 | 只能設在**節點**上，不能設在邊上任一點 | 沒講 |
+| 8 | 「A 主要發車站 → B 主要目的地」 | 單向；A 與 B **不收建設費**（既有設施） | 沒講 |
+| 9 | 「散布著多名乘客」 | 離散點；每位 demand = 1；強制指派一站（不能不搭） | 沒講 |
+| 10 | 「**城市**」空間表示 | 隨機合成無向圖（擾化網格 + 主幹道 + 程序化地形） | 沒講 |
+
+### 2.2 重點假設的詳細說明
+
+#### 站建設成本：**乘法**而非加法
+
+題目寫「每站固定成本 **+** 當地地形加成」。中文「加成」有歧義：
+- 字面：`c = fixed + terrain_offset`
+- 商業用法（如「10% 加成」）：`c = fixed × terrain_factor`
+
+我選**乘法**：
+```python
+stop_cost(v) = stop_fixed_cost × terrain[v]
+```
+理由：terrain 在程式碼裡是無量綱倍率（範圍 0.2~1.8），跟 `stop_fixed_cost` 相乘比較自然（地形是「修正因子」概念）。加法則 terrain 必須跟 fixed_cost 同單位，建模上尷尬。
+
+舉例（`stop_fixed_cost=50`）：
+- 站設在 terrain=1.8 的紅區 → 90
+- 站設在 terrain=0.2 的藍區 → 10
+
+差距 9 倍，演算法會偏好藍區設站 — 這個視覺梯度在前端肉眼可見。
+
+#### A 與 B 不收站建設費
+
+題目只說「每設一個站牌需要建設與營運成本」。A、B 是「**主要**發車站/目的地」— 我解讀為**既有設施**，不算進「新建中繼站」的預算。
+
+實作：MIP 在 stop 成本累加迴圈內 `if n in (A, B): continue`；KSP 經由 `fixed_stops=[A, B]` 排除。
+
+#### 行人 vs 公車的圖
+
+路網其實有**兩張**：
+
+| 圖 | 用途 | 邊權重 | 邊集合 |
+|---|---|---|---|
+| `G_bus` (`bus_subgraph(G)`) | 公車路徑 | `length × terrain` | 不含禁區邊 |
+| `G_full` (`G` 本身) | 乘客步行 | `length` 純距離 | 含禁區邊 |
+
+兩個顯式選擇：
+- **行人不被地形 penalize** — 因為 terrain 代表公車營運成本（燃料、保養），不是行人疲勞
+- **行人可穿越禁區邊** — 禁區是公車的法規限制（窄巷、行政管制），不是物理屏障
+
+如果現實的禁區是河流或牆，這假設要改 — 把行人 Dijkstra 也用 bus_subgraph 即可。
+
+#### 站只能在**節點**上
+
+實務公車站可以設在任一路段。我們的離散化要求站必須是節點。代價：站位置解析度受網格密度限制。改善方向：把每條邊細分成多個 sub-segment 節點，但 demo 不需要。
+
+#### terrain 是「隨機但有結構」
+
+不是每節點 iid 亂數，是 **多倍頻 value noise**（類 Perlin）：
+
+```python
+# graph_gen.py _value_noise_2d()
+for o in range(octaves):                  # 預設 3 層
+    res_r = rows // (2 ** (octaves - o))  # 粗 → 細
+    coarse = [[rng.random() ...]]
+    # 雙線性插值升解析度 → 累加
+    amp *= 0.5
+```
+
+結果：地圖上是**連續色塊**（藍便宜紅貴），不是椒鹽雜訊。整張地圖的隨機性收斂在單一 `seed` 上 — 同 seed → 同 terrain + 同節點 jitter + 同邊刪除 + 同禁區 + 同乘客。完全可重現。
+
+UI 上看到的藍紅漸層底色就是 terrain field 視覺化。
+
+#### 「不同權重」對應 UI 上的什麼
+
+| 題目所寫 | 對應 UI 滑桿 | 對應變數 |
+|---|---|---|
+| 路線行進/營運成本 | α 路線權重 | `alpha_route` |
+| 站建設成本 | 站建設成本 | `stop_fixed_cost`（同時兼任 γ 的角色） |
+| 乘客步行成本 | β 步行權重 | `beta_walk` |
+
+我把 γ 內嵌進 `stop_fixed_cost` 而沒額外開一個 γ 滑桿 — 因為 `γ × c_fix` 跟 `1 × (γ·c_fix)` 是同一回事，多一個滑桿只是冗餘。
+
+---
+
+## 3 · 為什麼最後選 KSP + MIP（而非其他方法）
 
 我在動工前列了一份候選清單，最後實作了三套：兩階段 baseline (B)、KSP (C)、MIP (A)。Demo 留下 C 跟 A 對照；B 跟其他方案的取捨記錄如下，**這部分就是「設計判斷」的展示**。
 
@@ -106,7 +199,7 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 ---
 
-## 3 · 兩個主力演算法說明
+## 4 · 兩個主力演算法說明
 
 ### C · KSP — K-shortest paths + corridor p-median  ⭐
 
@@ -123,7 +216,7 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 **關鍵設計**：第 2(a) 步的 corridor 擴展是「路線往乘客密集區彎曲」的機制 — 它讓 KSP 的可行解空間遠大於純兩階段。第 2(c) 的路線修補允許 spur，這實際上跳出了 MIP 的簡單路徑限制 (見實驗結果)。
 
-**參數**：`k_paths=6`、`corridor_hops=3`（皆為實驗 sweep 後的甜點，見第 4 章節）。
+**參數**：`k_paths=6`、`corridor_hops=3`（皆為實驗 sweep 後的甜點，見第 5 章節）。
 
 ### A · MIP — CP-SAT MILP（金標）
 
@@ -138,11 +231,11 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 ---
 
-## 4 · 實驗結果：演算法邊界量化
+## 5 · 實驗結果：演算法邊界量化
 
 跑了一份完整 sweep（`scripts/bench_ksp.py`），原始資料在 `docs/bench_ksp_data.json`。三種場景大小、每種多 seeds，對每個 seed 跑 MIP 當金標、再 sweep KSP 的 `k_paths × corridor_hops` 16 組設定。
 
-### 4.1 演算法成本對照（gap = KSP cost / MIP cost − 1）
+### 5.1 演算法成本對照（gap = KSP cost / MIP cost − 1）
 
 | 場景 | 規模 | MIP 狀態 | KSP 最佳 gap | KSP runtime |
 |---|---|---|---|---|
@@ -152,7 +245,7 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 **負 gap = KSP 比 MIP 更低成本**。意外的核心發現：**KSP 在多數場景反而贏 MIP**。
 
-### 4.2 為什麼 KSP 會贏「最佳化」的 MIP？
+### 5.2 為什麼 KSP 會贏「最佳化」的 MIP？
 
 兩個並存的原因：
 
@@ -161,7 +254,7 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 換句話說 — **MIP 的「OPTIMAL」是有星號的「在我寫的這個簡單路徑模型內最佳」**，並非「現實問題的真最佳」。這正是這個 demo 想傳遞的判斷力。
 
-### 4.3 KSP 參數調校：corridor_hops 才是靈魂
+### 5.3 KSP 參數調校：corridor_hops 才是靈魂
 
 抽 small + default 場景看單一變數的邊際效益（其他 seed 平均）：
 
@@ -187,7 +280,7 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 → 結論：UI 預設 `k_paths=6, corridor_hops=3`，能逼出 KSP 90% 的潛力。
 
-### 4.4 兩階段 baseline 的下場
+### 5.4 兩階段 baseline 的下場
 
 | 場景 | two_phase gap vs MIP |
 |---|---|
@@ -197,23 +290,23 @@ min   α · Σ_{(u,v) ∈ E_bus} w_uv · x_{u→v}      (路線營運)
 
 只在乘客剛好沿著最短路徑分佈時才接近最佳；一旦散開就慘輸。這證實了第 2 章節砍掉它的決策。
 
-### 4.5 graph_gen 的脆弱性發現
+### 5.5 graph_gen 的脆弱性發現
 
 9 個 seed 有 4 個 MIP FAILED — 原因是 `bus_subgraph` 用 `nx.edge_subgraph` 時會把「所有邊都被禁區標記的節點」一併剔除，造成 A 或 B 不在圖裡。已修為手動建 `nx.Graph` 並 `add_nodes_from`，所有節點都保留，只是可能 isolated。這是實驗才暴露出的 corner case。
 
 ---
 
-## 5 · 模型/實作的限制 (Limitations)
+## 6 · 模型/實作的限制 (Limitations)
 
 - **離散圖近似**：城市抽象成圖；現實的「站可以設在道路任意位置」未建模。需要更高解析度可細化道路為多個 sub-segment。
 - **步行距離用 full-graph 最短路**：實務應分開「步行網」與「道路網」（如 OSM 雙網層），這裡假設兩者相同。
 - **無容量、無班次、無時刻表**：純空間靜態問題。若要加 vehicle routing 動態元素，需擴充為 VRP / 時刻表合成。
-- **MIP 簡單路徑限制**：對應「公車不重複路段」假設；現實的環狀路、spur 服務需改用 capacitated multi-arc flow 重新建模。KSP 已允許 spur，所以 KSP 的解有時 strictly better than MIP 的「OPTIMAL」（見 4.2）。
+- **MIP 簡單路徑限制**：對應「公車不重複路段」假設；現實的環狀路、spur 服務需改用 capacitated multi-arc flow 重新建模。KSP 已允許 spur，所以 KSP 的解有時 strictly better than MIP 的「OPTIMAL」（見 5.2）。
 - **單目標純成本**：題目要的「不同權重」用 α/β/γ 線性組合處理；若要 Pareto-front 視覺化，需多目標求解（ε-constraint / NSGA-II）。
 
 ---
 
-## 6 · 使用 demo
+## 7 · 使用 demo
 
 打開 [http://localhost:8765/](http://localhost:8765/) 後：
 
