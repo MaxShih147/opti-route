@@ -88,10 +88,11 @@ class ProblemInstance:
     G: object  # networkx.Graph
     source: int
     sink: int
-    passenger_nodes: list[int]  # one node per passenger (snapped)
+    passenger_nodes: list[int]      # one node per passenger (snapped)
     passenger_ids: list[int]
-    candidate_stops: list[int]  # nodes eligible to host a stop
-    terrain: dict[int, float]   # node -> terrain cost factor
+    passenger_demands: list[int]    # population at each point (≥1)
+    candidate_stops: list[int]      # nodes eligible to host a stop
+    terrain: dict[int, float]       # node -> terrain cost factor
     params: SolveParams
     # APSP from each passenger node to every candidate stop (lazy filled)
     walk_dist: dict[tuple[int, int], float] = field(default_factory=dict)

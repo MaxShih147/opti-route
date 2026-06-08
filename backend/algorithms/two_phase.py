@@ -47,6 +47,7 @@ def solve_two_phase(inst: ProblemInstance) -> SolveResult:
     pmed = solve_pmedian(
         passenger_ids=inst.passenger_ids,
         passenger_nodes=inst.passenger_nodes,
+        passenger_demands=inst.passenger_demands,
         candidate_stops=candidate_stops,
         walk_dist=walk,
         fixed_stops=[inst.source, inst.sink],

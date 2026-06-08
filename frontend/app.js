@@ -113,10 +113,15 @@ function renderScene() {
     el("text", { x: B.x, y: B.y - 14, "text-anchor": "middle", class: "label" }, layers.endpoints).textContent = "B";
   }
 
-  // passengers
+  // passengers — radius scaled by demand (sqrt so big groups don't dominate)
   clear(layers.passengers);
   for (const p of scene.passengers) {
-    const c = el("circle", { cx: p.x, cy: p.y, r: 3.5, class: "passenger", "data-pid": p.id }, layers.passengers);
+    const demand = Math.max(1, p.demand || 1);
+    const r = 2.5 + Math.sqrt(demand - 1) * 2.2;
+    const c = el("circle", {
+      cx: p.x, cy: p.y, r,
+      class: "passenger", "data-pid": p.id, "data-demand": demand,
+    }, layers.passengers);
     c.addEventListener("click", (ev) => onPassengerClick(p, ev));
   }
 }

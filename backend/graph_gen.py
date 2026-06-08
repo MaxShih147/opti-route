@@ -33,7 +33,7 @@ class GenParams:
     terrain_amplitude: float = 0.8    # multiplicative range [1-amp, 1+amp]
     forbidden_zones: int = 2
     forbidden_radius_cells: tuple[int, int] = (1, 2)   # ≤ ~8 intersections covered
-    n_passengers: int = 30
+    n_passengers: int = 100
     seed: int = 42
 
 
@@ -283,22 +283,50 @@ def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, l
     source = min(bus_candidates, key=lambda n: dist_to_corner(n, cs, cs))
     sink = min(bus_candidates, key=lambda n: dist_to_corner(n, (C - 1) * cs + cs, (R - 1) * cs + cs))
 
-    # passengers: scatter around the map, then snap to nearest node
-    passengers = []
+    # passengers — clustered around random hotspots plus a uniform background,
+    # each point carrying a demand (population) used as walking-cost weight.
     w = (C - 1) * cs + 2 * cs
     h = (R - 1) * cs + 2 * cs
+
+    # number of hotspots scales with map size, capped to avoid clutter
+    n_hotspots = max(3, min(8, (R * C) // 30))
+    hotspot_centers = []
+    for _ in range(n_hotspots):
+        for _try in range(30):
+            hx = rng.uniform(cs * 1.5, w - cs * 1.5)
+            hy = rng.uniform(cs * 1.5, h - cs * 1.5)
+            if not _point_in_any_zone(hx, hy):
+                hotspot_centers.append((hx, hy))
+                break
+
+    # cluster spread; smaller = tighter hotspots
+    sigma = cs * 1.3
+
+    passengers = []
     for i in range(p.n_passengers):
-        # bias toward areas around but not on direct A-B line — makes problem interesting
-        px = rng.uniform(cs * 0.5, w - cs * 0.5)
-        py = rng.uniform(cs * 0.5, h - cs * 0.5)
-        # avoid placing inside forbidden zones
-        if _point_in_any_zone(px, py):
-            # retry once, else accept anyway (the node snap will pull them out)
-            px = rng.uniform(cs * 0.5, w - cs * 0.5)
-            py = rng.uniform(cs * 0.5, h - cs * 0.5)
-        # snap to nearest remaining node
-        nn = min(nodes_remaining, key=lambda n: (G.nodes[n]["x"] - px) ** 2 + (G.nodes[n]["y"] - py) ** 2)
-        passengers.append({"id": i, "x": px, "y": py, "node_id": nn})
+        # 75% chance from a hotspot, 25% uniform background scatter
+        for _try in range(8):
+            if hotspot_centers and rng.random() < 0.75:
+                hx, hy = rng.choice(hotspot_centers)
+                px = hx + rng.gauss(0, sigma)
+                py = hy + rng.gauss(0, sigma)
+            else:
+                px = rng.uniform(cs * 0.5, w - cs * 0.5)
+                py = rng.uniform(cs * 0.5, h - cs * 0.5)
+            # clip to bounds
+            px = max(cs * 0.4, min(w - cs * 0.4, px))
+            py = max(cs * 0.4, min(h - cs * 0.4, py))
+            if not _point_in_any_zone(px, py):
+                break
+        # demand: weighted toward smaller groups but with a long tail
+        demand = rng.choices([1, 2, 3, 4, 5, 6], weights=[44, 25, 14, 8, 5, 4])[0]
+        nn = min(
+            nodes_remaining,
+            key=lambda n: (G.nodes[n]["x"] - px) ** 2 + (G.nodes[n]["y"] - py) ** 2,
+        )
+        passengers.append({
+            "id": i, "x": px, "y": py, "node_id": nn, "demand": demand,
+        })
 
     node_xy = {n: (G.nodes[n]["x"], G.nodes[n]["y"]) for n in G.nodes()}
     return G, node_xy, passengers, source, sink, forbidden_zones

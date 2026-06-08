@@ -98,6 +98,7 @@ def solve_ksp(
         pmed = solve_pmedian(
             passenger_ids=inst.passenger_ids,
             passenger_nodes=inst.passenger_nodes,
+            passenger_demands=inst.passenger_demands,
             candidate_stops=candidates,
             walk_dist=walk,
             fixed_stops=[inst.source, inst.sink],

@@ -55,6 +55,7 @@ class SceneState:
             sink=self.scene_dict["sink"],
             passenger_ids=[p["id"] for p in passengers],
             passenger_nodes=[p["node_id"] for p in passengers],
+            passenger_demands=[int(p.get("demand", 1)) for p in passengers],
             candidate_stops=list(self.G.nodes()),
             terrain={n: self.G.nodes[n]["terrain"] for n in self.G.nodes()},
             params=params,

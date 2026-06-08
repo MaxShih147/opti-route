@@ -47,15 +47,19 @@ def solve_pmedian(
     stop_fixed_cost: float,
     terrain_at_node: dict[int, float],  # for stop terrain surcharge
     beta_walk: float,
+    passenger_demands: list[int] | None = None,   # population at each point (≥1)
 ) -> PMedianResult:
     """
     Greedy add + 1-swap local search for the p-median / UFLP-with-budget subproblem.
 
     Cost being minimized here:
-        β · Σ walk_dist(p, nearest_active_stop(p))
+        β · Σ demand[p] · walk_dist(p, nearest_active_stop(p))
       + Σ (stop_fixed_cost · terrain_at(s))   over chosen intermediates
     """
     INF = float("inf")
+    if passenger_demands is None:
+        passenger_demands = [1] * len(passenger_ids)
+    pid_to_demand = dict(zip(passenger_ids, passenger_demands))
 
     def stop_cost(s: int) -> float:
         return stop_fixed_cost * terrain_at_node.get(s, 1.0)
@@ -77,8 +81,9 @@ def solve_pmedian(
         for pid, pn in zip(passenger_ids, passenger_nodes):
             d, s = best_walk(pn, active)
             assign[pid] = s
-            per_p[pid] = d if d < INF else 0.0
-            walk_sum += d if d < INF else 0.0
+            d_eff = d if d < INF else 0.0
+            per_p[pid] = d_eff
+            walk_sum += d_eff * pid_to_demand.get(pid, 1)
         stop_sum = sum(stop_cost(s) for s in active_intermediates)
         return beta_walk * walk_sum + stop_sum, assign, per_p
 
@@ -143,7 +148,8 @@ def solve_pmedian(
                 moved = True
                 break
 
-    total_walk = sum(cur_per_p.values())
+    # demand-weighted total walk, matching the objective above
+    total_walk = sum(d * pid_to_demand.get(pid, 1) for pid, d in cur_per_p.items())
     total_stop_fixed = sum(stop_cost(s) for s in chosen)
 
     return PMedianResult(

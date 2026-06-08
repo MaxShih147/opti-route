@@ -126,6 +126,7 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
     # restrict candidates per passenger to e.g. their K-nearest stops (keeps z small)
     unique_p_nodes = list(set(inst.passenger_nodes))
     walk = compute_walk_distances(G, unique_p_nodes, nodes)
+    demand_for_pid = dict(zip(inst.passenger_ids, inst.passenger_demands))
 
     # For each passenger we only need z to plausible candidates — to keep the MIP
     # tractable, restrict to the M-nearest reachable nodes from the passenger.
@@ -166,10 +167,11 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
         c = int(round(p.stop_fixed_cost * terrain[n] * SCALE))
         if c:
             terms.append(c * s[n])
-    # walk cost
+    # walk cost — weighted by passenger demand (population at the point)
     for (pid, n), zvar in z.items():
         d = walk_for_pid[pid][n]
-        c = int(round(d * p.beta_walk * SCALE))
+        demand = demand_for_pid.get(pid, 1)
+        c = int(round(d * demand * p.beta_walk * SCALE))
         if c:
             terms.append(c * zvar)
 
@@ -212,8 +214,9 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
         for n in walk_for_pid.get(pid, {}):
             if solver.Value(z.get((pid, n), 0)) == 1:
                 d = walk_for_pid[pid][n]
+                demand = demand_for_pid.get(pid, 1)
                 assignments.append(Assignment(passenger_id=pid, stop_node_id=n, walk_distance=d))
-                walk_total += d
+                walk_total += d * demand
                 walk_per_p[pid] = d
                 assigned_stop[pid] = n
                 break
