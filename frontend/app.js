@@ -261,7 +261,8 @@ async function solve(algo) {
   try {
     // yield to the browser so the "busy" pill paints before we block
     await new Promise(r => setTimeout(r, 10));
-    const result = algo === "ksp" ? solveKsp(scene, params) : solveMip(scene, params);
+    // solveMip is async (needs to load HiGHS-WASM the first time)
+    const result = algo === "ksp" ? solveKsp(scene, params) : await solveMip(scene, params);
     result.algorithm = algo;  // attach so downstream rendering can key off it
     renderSolution(result);
     pushResult(result);

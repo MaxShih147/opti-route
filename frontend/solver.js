@@ -924,15 +924,18 @@ export function solveKsp(scene, {
 }
 
 // ---------------------------------------------------------------------------
-//  MIP stub — to be replaced by HiGHS-WASM in a follow-up
+//  MIP — delegated to mip.js (HiGHS-WASM)
 // ---------------------------------------------------------------------------
 
-export function solveMip(scene, params) {
-  throw new Error(
-    "MIP 求解器尚未在純前端版本中實作（C++ OR-Tools 無法直接在瀏覽器跑）。" +
-    "若要使用，請切回後端 API 版本，或等待 HiGHS-WASM 整合。"
-  );
+export async function solveMip(scene, params) {
+  const { solveMipHighs } = await import("./mip.js");
+  return solveMipHighs(scene, params);
 }
+
+// Shared graph helpers exposed for mip.js
+export const _internalsForMip = {
+  dijkstra, buildAdjacency, nodeConnectedComponent,
+};
 
 // ---------------------------------------------------------------------------
 //  Scene edits (move A/B, add/move/delete passenger)
