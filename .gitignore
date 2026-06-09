@@ -16,3 +16,4 @@ venv/
 
 # Runtime
 *.log
+logs/

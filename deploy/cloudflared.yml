@@ -1,0 +1,7 @@
+tunnel: 657baa2f-0322-466a-b6d4-8b6977ccaca5
+credentials-file: /Users/max_server/.cloudflared/657baa2f-0322-466a-b6d4-8b6977ccaca5.json
+
+ingress:
+  - hostname: opti-route.max-the-solution.com
+    service: http://localhost:8765
+  - service: http_status:404
