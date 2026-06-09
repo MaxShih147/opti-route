@@ -130,16 +130,22 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
 
     # For each passenger we only need z to plausible candidates — to keep the MIP
     # tractable, restrict to the M-nearest reachable nodes from the passenger.
-    M = 40  # candidate stops per passenger
+    M = 20  # candidate stops per passenger (Phase 1: was 40)
     z: dict[tuple[int, int], cp_model.IntVar] = {}
     walk_for_pid: dict[int, dict[int, float]] = {}
     for pid, pn in zip(inst.passenger_ids, inst.passenger_nodes):
         if pn not in walk:
             continue
-        # take M nearest stops by walking distance
-        nearest = sorted(walk[pn].items(), key=lambda kv: kv[1])[:M]
-        walk_for_pid[pid] = dict(nearest)
-        for n, _ in nearest:
+        # M-nearest stops by walking distance + always include A and B so a
+        # passenger always has a feasible assignment (they're free stops).
+        nearest_items = sorted(walk[pn].items(), key=lambda kv: kv[1])[:M]
+        candidate_nodes = {n for n, _ in nearest_items}
+        if A in walk[pn]:
+            candidate_nodes.add(A)
+        if B in walk[pn]:
+            candidate_nodes.add(B)
+        walk_for_pid[pid] = {n: walk[pn][n] for n in candidate_nodes}
+        for n in walk_for_pid[pid]:
             z[(pid, n)] = model.NewBoolVar(f"z_{pid}_{n}")
 
     # each passenger assigned to exactly one stop (out of its M candidates)
@@ -177,9 +183,47 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
 
     model.Minimize(sum(terms))
 
+    # ---- Phase 1 warm-start: seed the search with KSP's solution ----
+    # KSP takes ~100–300ms but gives a high-quality incumbent, so CP-SAT
+    # starts with a tight upper bound instead of probing from scratch.
+    try:
+        from .ksp import solve_ksp
+        ksp_hint = solve_ksp(inst)
+    except Exception:
+        ksp_hint = None
+
+    if ksp_hint is not None:
+        # Hint x arcs along the KSP path
+        ksp_arcs = set()
+        for i in range(len(ksp_hint.path_nodes) - 1):
+            u, v = ksp_hint.path_nodes[i], ksp_hint.path_nodes[i + 1]
+            ksp_arcs.add((u, v))
+        for arc, var in x.items():
+            model.AddHint(var, 1 if arc in ksp_arcs else 0)
+        # Hint s stops
+        hint_stops = {sinfo.node_id for sinfo in ksp_hint.stops}
+        for n in nodes:
+            if n in (A, B):
+                continue
+            model.AddHint(s[n], 1 if n in hint_stops else 0)
+        # Hint z passenger assignments (only where the variable exists)
+        hint_assign = {a.passenger_id: a.stop_node_id for a in ksp_hint.assignments}
+        for (pid, n), zvar in z.items():
+            model.AddHint(zvar, 1 if hint_assign.get(pid) == n else 0)
+        # Hint MTZ u potentials by position along the KSP path
+        path_pos: dict[int, int] = {}
+        for i, n in enumerate(ksp_hint.path_nodes):
+            path_pos.setdefault(n, i)  # keep first occurrence on spurs
+        for n, uvar in u_var.items():
+            if n == A:
+                continue
+            if n in path_pos:
+                model.AddHint(uvar, min(path_pos[n], N))
+
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = p.mip_time_limit_s
-    solver.parameters.num_search_workers = 4
+    solver.parameters.num_search_workers = 8           # Phase 1: was 4
+    solver.parameters.linearization_level = 2          # Phase 1: tighter LP cuts
     status = solver.Solve(model)
 
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
