@@ -32,6 +32,20 @@ FRONTEND_DIR = APP_ROOT / "frontend"
 app = FastAPI(title="Bus Route Optimizer")
 
 
+# Force fresh CSS/JS/HTML on each visit so Cloudflare can't pin a stale
+# build at the edge. Long-lived caching of static assets is the wrong
+# default for a small demo we keep iterating on.
+@app.middleware("http")
+async def force_revalidation(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path in ("/", "/about"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    elif path.startswith("/static/") and path.rsplit(".", 1)[-1] in ("css", "js", "html"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
+
+
 # ---- in-memory state ----
 
 class SceneState:

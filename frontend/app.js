@@ -270,6 +270,12 @@ async function apiEdit(body) {
 }
 
 async function solve(algo) {
+  // Already computed on this scene → just re-display the cached result,
+  // mirroring what a click on the comparison-table row does.
+  if (solvedForScene.has(algo)) {
+    showResult(algo);
+    return;
+  }
   const btn = $(`button.solver[data-algo="${algo}"]`);
   btn.disabled = true;
   status(`求解中 (${ALGO_LABELS[algo]}) …`, "busy");
@@ -312,18 +318,20 @@ async function solve(algo) {
   }
 }
 
-// Disable each solver button once it has been run on the current scene.
-// Generating a new city clears the set and re-enables both.
+// Mark each solver button:
+//   .done    → already computed for this scene; click switches the map to
+//              the cached result instead of recomputing
+//   .active  → its solution is currently rendered on the map
+// Generating a new city or editing the scene clears `solvedForScene`.
 function refreshSolverButtons() {
   for (const btn of $$(".solver")) {
     const algo = btn.dataset.algo;
-    if (solvedForScene.has(algo)) {
-      btn.disabled = true;
-      btn.classList.add("done");
-      btn.title = "已對目前地圖求解過，點「生成城市」可重新求解";
+    const solved = solvedForScene.has(algo);
+    btn.classList.toggle("done", solved);
+    btn.classList.toggle("active", algo === activeAlgo);
+    if (solved) {
+      btn.title = "點此切換顯示這個方法的結果（不會重新求解）";
     } else {
-      btn.disabled = false;
-      btn.classList.remove("done");
       btn.removeAttribute("title");
     }
   }
@@ -345,6 +353,7 @@ function showResult(algo) {
   activeAlgo = algo;
   renderSolution(r);
   renderResultsTable();
+  refreshSolverButtons();
   let s = `${ALGO_LABELS[algo]} · 總成本 ${r.cost_total.toFixed(1)} · ${r.runtime_ms.toFixed(0)}ms`;
   if (r.optimality_gap != null) s += ` · gap ${(r.optimality_gap*100).toFixed(1)}%`;
   status(s);

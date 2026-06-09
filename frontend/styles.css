@@ -30,7 +30,12 @@ html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: 
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   font-size: 13px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
 
-.app { display: grid; grid-template-columns: 340px 1fr; height: 100vh; }
+.app {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100vh;
+  height: 100dvh;  /* iOS Safari handles dynamic toolbar correctly */
+}
 
 /* ---------- sidebar ---------- */
 
@@ -202,11 +207,23 @@ input[type="range"]:active::-webkit-slider-thumb {
 }
 
 button { font-family: inherit; cursor: pointer; }
+/* unified button style: dark background + thin border, no fills.
+   .primary just uses a slightly stronger border to read as the main action. */
 button.primary {
-  background: var(--accent); color: #fff; border: 0; padding: 9px 12px;
-  border-radius: 6px; font-weight: 500; font-size: 12.5px;
+  background: #05080d;
+  color: var(--text);
+  border: 1px solid var(--accent-2);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 12.5px;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
-button.primary:hover { filter: brightness(1.1); }
+button.primary:hover {
+  background: #2a3138;
+  border-color: #ffffff;
+  color: #ffffff;
+}
 button.block { width: 100%; margin-top: 10px; }
 
 .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -228,12 +245,17 @@ button.solver {
 }
 button.solver:hover { border-color: var(--accent); }
 button.solver:disabled { opacity: 0.5; cursor: wait; }
+/* .done = already computed on this scene; clickable to switch displayed result */
 button.solver.done {
-  opacity: 0.4;
-  cursor: not-allowed;
   background: rgba(255, 255, 255, 0.02);
 }
-button.solver.done .badge { filter: grayscale(0.4); }
+button.solver.done .badge { filter: grayscale(0.25); }
+/* .active = this method's result is currently rendered on the map */
+button.solver.active {
+  border-color: var(--accent-2);
+  background: rgba(140, 152, 164, 0.10);
+}
+button.solver.active .badge { filter: none; }
 .badge {
   grid-row: 1 / 3;
   align-self: center;
@@ -490,3 +512,81 @@ button.solver.done .badge { filter: grayscale(0.4); }
 }
 #canvas.has-solution .layer-passengers { opacity: 0.55; transition: opacity 220ms ease; }
 /* endpoints (A/B), route, stops, walk lines remain full strength */
+
+/* =========================================================================
+   Responsive — phones and small tablets stack vertically
+   ========================================================================= */
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 45dvh) 1fr;
+  }
+
+  .sidebar {
+    height: auto;
+    max-height: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 12px;
+    gap: 10px;
+  }
+
+  /* compact brand */
+  .brand h1 { font-size: 18px; }
+  .brand .tagline { font-size: 10.5px; }
+  .brand-about { font-size: 10.5px; padding: 2px 6px; }
+
+  /* tighter panels */
+  .panel { border-radius: 6px; }
+  .panel > summary { padding: 9px 12px; gap: 8px; }
+  .panel h2 { font-size: 13px; }
+  .panel-body { padding: 10px 12px 12px; }
+
+  .grid2 { gap: 6px 10px; }
+  .grid2 label { font-size: 10.5px; }
+  .grid2 input { font-size: 12px; padding: 6px 8px; }   /* iOS doesn't zoom-in on focus when font-size ≥ 12 */
+
+  button.primary { padding: 11px 12px; font-size: 13px; }
+  button.mode { padding: 10px; font-size: 11.5px; min-height: 36px; }
+
+  /* solver button taller for thumb */
+  button.solver { padding: 10px 12px; min-height: 56px; }
+
+  /* results table can scroll inside its panel-body */
+  #results-table { overflow-x: auto; }
+  #results-table th, #results-table td { padding: 6px 4px; font-size: 10.5px; }
+
+  /* canvas overlays slightly smaller */
+  .toolbar { top: 8px; left: 10px; right: 10px; gap: 8px; }
+  .status { padding: 4px 8px; font-size: 10.5px; }
+  .legend-box { font-size: 11px; }
+  .legend-box summary { padding: 6px 10px; font-size: 11px; }
+  .legend-grid { padding: 8px 10px 10px; gap: 5px 12px; }
+}
+
+/* very narrow — phone portrait */
+@media (max-width: 500px) {
+  .app {
+    grid-template-rows: minmax(0, 50dvh) 1fr;
+  }
+
+  .sidebar { padding: 10px; gap: 8px; }
+  .brand h1 { font-size: 17px; }
+  .brand .tagline { font-size: 10px; }
+
+  /* legend only as a chip when collapsed — auto-collapsed on small screens */
+  .legend-box .legend-grid { grid-template-columns: 1fr; }
+
+  /* canvas takes more vertical room — favour map over controls */
+  .toolbar { top: 6px; left: 8px; right: 8px; }
+}
+
+/* landscape phones — keep horizontal split since screen is wide enough */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  .app {
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr;
+  }
+  .sidebar { max-height: 100dvh; border-right: 1px solid var(--border); border-bottom: 0; }
+}
