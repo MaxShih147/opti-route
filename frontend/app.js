@@ -1,5 +1,6 @@
-// Bus Route Optimizer — frontend.
-// Single-page, vanilla JS, SVG canvas. Talks to the FastAPI backend over /api.
+// Bus Route Optimizer — fully-static frontend.
+// All solver logic runs in the browser (solver.js); no backend required.
+import { generateCity, solveKsp, solveMip, editScene } from "./solver.js";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -205,36 +206,14 @@ $$(".mode").forEach(btn => btn.addEventListener("click", () => {
   SVG.style.cursor = (editMode === "none") ? "default" : "crosshair";
 }));
 
-// ---------------- API ----------------
+// ---------------- Local solver wrappers ----------------
 
-async function apiGet(path) {
-  const r = await fetch(path);
-  if (!r.ok) throw new Error(`${path} ${r.status}`);
-  return r.json();
-}
-async function apiPost(path, body) {
-  const r = await fetch(path, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) {
-    const text = await r.text();
-    let detail = text;
-    try { detail = JSON.parse(text).detail || text; } catch {}
-    const err = new Error(detail);
-    err.status = r.status;
-    throw err;
-  }
-  return r.json();
+function loadScene() {
+  // first-time city: use default UI params
+  regenerate();
 }
 
-async function loadScene() {
-  scene = await apiGet("/api/scene");
-  renderScene(); clearSolution();
-  status(`scene: ${scene.nodes.length} 節點 · ${scene.edges.length} 邊 · ${scene.passengers.length} 乘客`);
-}
-
-async function regenerate() {
+function regenerate() {
   status("生成中…", "busy");
   // 城市規模 → row × col 約略平方分解，城市偏橫向：cols ≥ rows
   const scale = Math.max(16, +$("#g-scale").value);
@@ -250,16 +229,17 @@ async function regenerate() {
     arterial_count: 4,
   };
   try {
-    scene = await apiPost("/api/generate", params);
+    scene = generateCity(params);
     renderScene(); clearSolution();
     lastResults = []; activeAlgo = null; renderResultsTable();
     status(`已生成 · ${scene.nodes.length} 節點 · ${scene.edges.length} 邊 · ${scene.passengers.length} 乘客`);
   } catch (e) { status("生成失敗: " + e.message, "error"); }
 }
 
-async function apiEdit(body) {
+function apiEdit(body) {
   try {
-    scene = await apiPost("/api/edit", body);
+    // map "action" key to "type" for solver.editScene signature compatibility
+    scene = editScene(scene, { type: body.action, ...body });
     renderScene(); clearSolution();
   } catch (e) { status(e.message, "error"); }
 }
@@ -271,17 +251,18 @@ async function solve(algo) {
   const kpInput = $("#p-kp");
   const corrInput = $("#p-corr");
   const params = {
-    algorithm: algo,
     max_stops: +$("#p-k").value,
     alpha_route: +$("#p-alpha").value,
     beta_walk: +$("#p-beta").value,
     stop_fixed_cost: +$("#p-stop").value,
     k_paths: kpInput ? +kpInput.value : 6,
     corridor_hops: corrInput ? +corrInput.value : 3,
-    mip_time_limit_s: 20.0,
   };
   try {
-    const result = await apiPost("/api/solve", params);
+    // yield to the browser so the "busy" pill paints before we block
+    await new Promise(r => setTimeout(r, 10));
+    const result = algo === "ksp" ? solveKsp(scene, params) : solveMip(scene, params);
+    result.algorithm = algo;  // attach so downstream rendering can key off it
     renderSolution(result);
     pushResult(result);
     let s = `${ALGO_LABELS[algo]} · 總成本 ${result.cost_total.toFixed(1)} · ${result.runtime_ms.toFixed(0)}ms`;
@@ -374,4 +355,4 @@ function renderResultsTable() {
 $("#btn-regen").addEventListener("click", regenerate);
 $$(".solver").forEach(btn => btn.addEventListener("click", () => solve(btn.dataset.algo)));
 
-loadScene().catch(e => status("載入失敗: " + e.message, "error"));
+try { loadScene(); } catch (e) { status("載入失敗: " + e.message, "error"); }
