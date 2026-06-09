@@ -48,15 +48,68 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
     if not nx.has_path(Gbus, inst.source, inst.sink):
         raise RuntimeError("no bus-feasible path between A and B")
 
-    nodes = list(Gbus.nodes())
     A, B = inst.source, inst.sink
+
+    # ---- Phase 2: KSP corridor restriction ----
+    # Run KSP first (also used for warm-start hints below). The corridor is
+    # the union of nodes within `corridor_hops_mip` BFS hops of any KSP
+    # candidate path. Restricting the MIP to this subgraph cuts arc count
+    # ~50% on default scenes without losing the optimum in practice.
+    from itertools import islice
+    from .ksp import solve_ksp
+    try:
+        ksp_hint = solve_ksp(inst)
+    except Exception:
+        ksp_hint = None
+
+    corridor_nodes: set[int] | None = None
+    if ksp_hint is not None:
+        # Re-derive corridor from the Yen path family (not just the winning one)
+        try:
+            yen_paths = list(islice(
+                nx.shortest_simple_paths(Gbus, A, B, weight="weight"),
+                p.k_paths,
+            ))
+        except Exception:
+            yen_paths = [ksp_hint.path_nodes]
+        # 4-hop BFS neighborhood around the Yen path family. Slightly wider
+        # than KSP's own corridor_hops so MIP almost always has access to
+        # any node the true optimum needs while still cutting node count.
+        seed_nodes = set()
+        for path in yen_paths:
+            seed_nodes.update(path)
+        corridor_nodes = set(seed_nodes)
+        frontier = set(seed_nodes)
+        for _ in range(5):
+            nxt = set()
+            for u in frontier:
+                if u in Gbus:
+                    for v in Gbus.neighbors(u):
+                        if v not in corridor_nodes:
+                            nxt.add(v)
+            corridor_nodes |= nxt
+            frontier = nxt
+        corridor_nodes.add(A)
+        corridor_nodes.add(B)
+
+    if corridor_nodes is None or len(corridor_nodes) >= Gbus.number_of_nodes() * 0.95:
+        # corridor not useful (or KSP failed); use full bus graph
+        nodes = list(Gbus.nodes())
+        Hbus = Gbus
+    else:
+        nodes = list(corridor_nodes)
+        Hbus = Gbus.subgraph(corridor_nodes).copy()
+        if not nx.has_path(Hbus, A, B):
+            # corridor disconnects A↔B; fall back to full
+            nodes = list(Gbus.nodes())
+            Hbus = Gbus
 
     model = cp_model.CpModel()
 
     # ---- arc variables ----
     x: dict[tuple[int, int], cp_model.IntVar] = {}
     arc_weight: dict[tuple[int, int], float] = {}
-    for u, v, d in Gbus.edges(data=True):
+    for u, v, d in Hbus.edges(data=True):
         x[(u, v)] = model.NewBoolVar(f"x_{u}_{v}")
         x[(v, u)] = model.NewBoolVar(f"x_{v}_{u}")
         arc_weight[(u, v)] = d["weight"]
@@ -183,37 +236,27 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
 
     model.Minimize(sum(terms))
 
-    # ---- Phase 1 warm-start: seed the search with KSP's solution ----
-    # KSP takes ~100–300ms but gives a high-quality incumbent, so CP-SAT
-    # starts with a tight upper bound instead of probing from scratch.
-    try:
-        from .ksp import solve_ksp
-        ksp_hint = solve_ksp(inst)
-    except Exception:
-        ksp_hint = None
-
+    # ---- KSP warm-start hints ----
+    # Phase 1: seed the search with KSP's solution so CP-SAT starts with a
+    # tight upper bound. Skip arcs/nodes not in the corridor subgraph.
     if ksp_hint is not None:
-        # Hint x arcs along the KSP path
         ksp_arcs = set()
         for i in range(len(ksp_hint.path_nodes) - 1):
             u, v = ksp_hint.path_nodes[i], ksp_hint.path_nodes[i + 1]
             ksp_arcs.add((u, v))
         for arc, var in x.items():
             model.AddHint(var, 1 if arc in ksp_arcs else 0)
-        # Hint s stops
         hint_stops = {sinfo.node_id for sinfo in ksp_hint.stops}
         for n in nodes:
             if n in (A, B):
                 continue
             model.AddHint(s[n], 1 if n in hint_stops else 0)
-        # Hint z passenger assignments (only where the variable exists)
         hint_assign = {a.passenger_id: a.stop_node_id for a in ksp_hint.assignments}
         for (pid, n), zvar in z.items():
             model.AddHint(zvar, 1 if hint_assign.get(pid) == n else 0)
-        # Hint MTZ u potentials by position along the KSP path
         path_pos: dict[int, int] = {}
         for i, n in enumerate(ksp_hint.path_nodes):
-            path_pos.setdefault(n, i)  # keep first occurrence on spurs
+            path_pos.setdefault(n, i)
         for n, uvar in u_var.items():
             if n == A:
                 continue
@@ -222,7 +265,7 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = p.mip_time_limit_s
-    solver.parameters.num_search_workers = 8           # Phase 1: was 4
+    solver.parameters.num_search_workers = 16          # Phase 2a: was 8 (Mac Studio M3 Ultra)
     solver.parameters.linearization_level = 2          # Phase 1: tighter LP cuts
     status = solver.Solve(model)
 
