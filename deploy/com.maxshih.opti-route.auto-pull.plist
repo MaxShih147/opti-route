@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.maxshih.opti-route.auto-pull</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/max_server/repo_claude/opti-route/deploy/auto-pull.sh</string>
+  </array>
+
+  <key>StartInterval</key>
+  <integer>60</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/max_server/repo_claude/opti-route/logs/auto-pull.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/max_server/repo_claude/opti-route/logs/auto-pull.err.log</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+</dict>
+</plist>

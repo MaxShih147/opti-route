@@ -28,6 +28,8 @@ so there's no CORS to configure and only one hostname to manage.
 | `cloudflared.yml` | `~/.cloudflared/config-opti-route.yml` |
 | `com.maxshih.opti-route.backend.plist` | `~/Library/LaunchAgents/com.maxshih.opti-route.backend.plist` |
 | `com.maxshih.opti-route.tunnel.plist` | `~/Library/LaunchAgents/com.maxshih.opti-route.tunnel.plist` |
+| `com.maxshih.opti-route.auto-pull.plist` | `~/Library/LaunchAgents/com.maxshih.opti-route.auto-pull.plist` |
+| `auto-pull.sh` | invoked from the auto-pull plist; stays in-repo |
 
 The originals here are the source of truth; the deployed copies should be
 kept in sync (or symlinked).
@@ -93,6 +95,36 @@ curl -s -o /dev/null -w "%{http_code}\n" https://opti-route.max-the-solution.com
 ```
 
 Both should return `200`.
+
+---
+
+## Auto-deploy on `git push`
+
+Two layered mechanisms keep production in sync with the repo with **zero
+manual steps**:
+
+### 1. uvicorn `--reload` (local edits)
+The backend plist runs `uvicorn … --reload --reload-dir backend`.  Any
+saved `.py` file under `backend/` triggers an in-process reload — visible
+on the public URL within ~1 second.  Frontend files are served statically
+by FastAPI so they're picked up on the next request, no reload required.
+
+### 2. `auto-pull.sh` timer (remote pushes)
+`deploy/auto-pull.sh` runs every 60 s under launchd
+(`com.maxshih.opti-route.auto-pull`). Logic:
+
+  - bail out if working tree has uncommitted edits (so it never blows
+    away an in-progress local change)
+  - `git fetch origin main`
+  - if `HEAD != origin/main`: `git reset --hard origin/main` and
+    `launchctl kickstart` the backend
+
+Together they cover both workflows:
+
+  - editing on the Mac Studio → uvicorn reloads instantly
+  - pushing from elsewhere → poll picks it up within a minute
+
+Logs at `logs/auto-pull.log`.
 
 ---
 

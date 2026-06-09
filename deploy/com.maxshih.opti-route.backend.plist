@@ -17,6 +17,9 @@
     <string>127.0.0.1</string>
     <string>--port</string>
     <string>8765</string>
+    <string>--reload</string>
+    <string>--reload-dir</string>
+    <string>/Users/max_server/repo_claude/opti-route/backend</string>
   </array>
 
   <key>RunAtLoad</key>
