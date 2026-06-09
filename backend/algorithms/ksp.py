@@ -21,6 +21,7 @@ Why this design:
   - Far cheaper than full MIP, and easy to explain to a planner.
 """
 from __future__ import annotations
+import math
 import time
 from itertools import islice
 import networkx as nx
@@ -49,18 +50,48 @@ def _corridor_nodes(G: nx.Graph, path: list[int], hops: int) -> set[int]:
     return out
 
 
+def _auto_ksp_params(n_nodes: int) -> tuple[int, int]:
+    """
+    Empirical defaults derived from a (k_paths × corridor_hops) sweep against
+    MIP optima:
+
+      * k_paths plateaus past 6 — k=3 and k=20 give identical gap once the
+        corridor is wide enough.  6 is a comfortable middle.
+      * corridor_hops scales with √N; aiming for a corridor that just covers
+        the realistic detours.
+
+    Yields (k_paths, corridor_hops).
+    """
+    k = 6
+    corr = max(3, min(6, round(0.37 * math.sqrt(max(1, n_nodes)))))
+    return k, corr
+
+
+# Sentinel used to mark "fall back to auto" — distinct from any meaningful
+# integer parameter value so a future "k_paths=0" doesn't collide with it.
+_AUTO = object()
+
+
 def solve_ksp(
     inst: ProblemInstance,
-    k_paths: int | None = None,
-    corridor_hops: int | None = None,
+    k_paths: int | None | object = _AUTO,
+    corridor_hops: int | None | object = _AUTO,
 ) -> SolveResult:
-    """Use overrides if passed; otherwise read from inst.params."""
+    """
+    Use explicit overrides if passed (including None which means
+    inst.params).  Otherwise derive both from the graph size.
+    """
     t0 = time.perf_counter()
     G = inst.G
     p = inst.params
-    if k_paths is None:
+    auto_k, auto_corr = _auto_ksp_params(G.number_of_nodes())
+    if k_paths is _AUTO:
+        k_paths = auto_k
+    elif k_paths is None:
         k_paths = p.k_paths
-    if corridor_hops is None:
+    if corridor_hops is _AUTO:
+        corridor_hops = auto_corr
+    elif corridor_hops is None:
         corridor_hops = p.corridor_hops
 
     Gbus = bus_subgraph(G)
