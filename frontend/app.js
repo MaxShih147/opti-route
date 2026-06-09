@@ -9,6 +9,7 @@ let scene = null;
 let editMode = "none";
 let lastResults = []; // history of solves, for comparison
 let activeAlgo = null; // which algorithm's solution is currently rendered on the map
+let solvedForScene = new Set();  // algos already solved on the current scene
 const ALGO_LABELS = {
   ksp: "K-最短路徑啟發式",
   mip: "混合整數規劃 (MILP)",
@@ -253,6 +254,7 @@ async function regenerate() {
     scene = await apiPost("/api/generate", params);
     renderScene(); clearSolution();
     lastResults = []; activeAlgo = null; renderResultsTable();
+    solvedForScene.clear(); refreshSolverButtons();
     status(`已生成 · ${scene.nodes.length} 節點 · ${scene.edges.length} 邊 · ${scene.passengers.length} 乘客`);
   } catch (e) { status("生成失敗: " + e.message, "error"); }
 }
@@ -261,6 +263,9 @@ async function apiEdit(body) {
   try {
     scene = await apiPost("/api/edit", body);
     renderScene(); clearSolution();
+    // edits (move A/B, add/delete passenger) invalidate any previous solution
+    lastResults = []; activeAlgo = null; renderResultsTable();
+    solvedForScene.clear(); refreshSolverButtons();
   } catch (e) { status(e.message, "error"); }
 }
 
@@ -284,6 +289,7 @@ async function solve(algo) {
     const result = await apiPost("/api/solve", params);
     renderSolution(result);
     pushResult(result);
+    solvedForScene.add(algo);
     let s = `${ALGO_LABELS[algo]} · 總成本 ${result.cost_total.toFixed(1)} · ${result.runtime_ms.toFixed(0)}ms`;
     if (result.optimality_gap != null) s += ` · gap ${(result.optimality_gap*100).toFixed(1)}%`;
     status(s);
@@ -302,6 +308,24 @@ async function solve(algo) {
     status(pretty, "error");
   } finally {
     btn.disabled = false;
+    refreshSolverButtons();
+  }
+}
+
+// Disable each solver button once it has been run on the current scene.
+// Generating a new city clears the set and re-enables both.
+function refreshSolverButtons() {
+  for (const btn of $$(".solver")) {
+    const algo = btn.dataset.algo;
+    if (solvedForScene.has(algo)) {
+      btn.disabled = true;
+      btn.classList.add("done");
+      btn.title = "已對目前地圖求解過，點「生成城市」可重新求解";
+    } else {
+      btn.disabled = false;
+      btn.classList.remove("done");
+      btn.removeAttribute("title");
+    }
   }
 }
 

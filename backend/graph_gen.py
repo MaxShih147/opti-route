@@ -143,7 +143,7 @@ def generate_city(p: GenParams) -> tuple[nx.Graph, dict, list[dict], int, int, l
     # If a candidate violates either, shrink/retry up to 40 attempts.
     scale = R * C
     max_cov = 4 if scale < 200 else 8
-    MAX_PAIR_OVERLAP = 3
+    MAX_PAIR_OVERLAP = 0   # forbidden zones must not share any intersection
 
     # quick lookup: (x, y, node_id) for coverage counting
     node_xy_list = [(G.nodes[n]["x"], G.nodes[n]["y"], n) for n in G.nodes()]

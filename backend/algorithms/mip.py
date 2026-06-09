@@ -72,15 +72,19 @@ def solve_mip(inst: ProblemInstance) -> SolveResult:
             ))
         except Exception:
             yen_paths = [ksp_hint.path_nodes]
-        # 4-hop BFS neighborhood around the Yen path family. Slightly wider
-        # than KSP's own corridor_hops so MIP almost always has access to
-        # any node the true optimum needs while still cutting node count.
+        # BFS neighborhood around the Yen path family. Hops auto-scale with
+        # √N. MIP's corridor removes nodes from the model (whereas KSP's
+        # corridor only constrains stop candidates), so MIP needs a slightly
+        # higher floor than KSP to avoid pruning away the true optimum on
+        # small graphs.
+        import math as _math
+        mip_hops = max(4, min(7, round(0.37 * _math.sqrt(len(Gbus)))))
         seed_nodes = set()
         for path in yen_paths:
             seed_nodes.update(path)
         corridor_nodes = set(seed_nodes)
         frontier = set(seed_nodes)
-        for _ in range(5):
+        for _ in range(mip_hops):
             nxt = set()
             for u in frontier:
                 if u in Gbus:

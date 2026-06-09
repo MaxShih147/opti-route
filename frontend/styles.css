@@ -228,6 +228,12 @@ button.solver {
 }
 button.solver:hover { border-color: var(--accent); }
 button.solver:disabled { opacity: 0.5; cursor: wait; }
+button.solver.done {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+button.solver.done .badge { filter: grayscale(0.4); }
 .badge {
   grid-row: 1 / 3;
   align-self: center;
